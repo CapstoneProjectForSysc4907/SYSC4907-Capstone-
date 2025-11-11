@@ -14,4 +14,38 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jme3</id>
+            <url>https://nexus.jmonkeyengine.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jmonkeyengine</groupId>
+            <artifactId>jme3-core</artifactId>
+            <version>3.5.2-stable</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmonkeyengine</groupId>
+            <artifactId>jme3-desktop</artifactId>
+            <version>3.5.2-stable</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmonkeyengine</groupId>
+            <artifactId>jme3-lwjgl3</artifactId>
+            <version>3.5.2-stable</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.stephengold</groupId>
+            <artifactId>Minie</artifactId>
+            <version>7.7.0</version>
+        </dependency>
+    </dependencies>
+
+
 </project>
