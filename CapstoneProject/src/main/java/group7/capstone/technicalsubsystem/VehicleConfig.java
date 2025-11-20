@@ -1,5 +1,6 @@
 package group7.capstone.technicalsubsystem;
 
+/// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
 /// This class is the data layer representing the car's specs
 public class VehicleConfig {
     private static VehicleConfig instance;

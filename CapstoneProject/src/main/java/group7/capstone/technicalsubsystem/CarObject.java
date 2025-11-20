@@ -3,6 +3,7 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 
+/// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
 /// Carobject is the representation of the car itself. It is a high level representation that interacts with the physics
 /// This class is an integration layer between the VehiclePhysicsSystem and the Vechicle Config
 /// It's not just a controller because it does define the shape of the car.

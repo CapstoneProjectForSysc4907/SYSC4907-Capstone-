@@ -3,6 +3,7 @@ package group7.capstone.technicalsubsystem;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 
+/// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
 /// This class here has all the actual physics in it, a real logic layer. Do not call it, use CarObject.
 
 public class VehiclePhysicsSystem {
