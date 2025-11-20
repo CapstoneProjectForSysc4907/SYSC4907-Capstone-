@@ -52,4 +52,26 @@ public class CarObject {
     public String getId() {
         return id;
     }
+
+    public String getCompassDirection() {
+        Vector3f forward = body.getPhysicsRotation().mult(Vector3f.UNIT_Z);
+
+        float angle = (float) Math.atan2(forward.x, forward.z);
+
+        // 0° == north
+        float degrees = (float) Math.toDegrees(angle);
+
+        if (degrees < 0) {
+            degrees += 360f;
+        }
+
+        if (degrees >= 337.5 || degrees < 22.5) return "N " + degrees +"° ";
+        if (degrees < 67.5) return ("NE " + degrees + "° ");
+        if (degrees < 112.5) return ("E" + degrees + "° ");
+        if (degrees < 157.5) return ("SE " + degrees + "° ");
+        if (degrees < 202.5) return ("S " + degrees + "° ");
+        if (degrees < 247.5) return ("SW " + degrees + "° ");
+        if (degrees < 292.5) return ("W " + degrees +"° ");
+        return "NW";
+    }
 }

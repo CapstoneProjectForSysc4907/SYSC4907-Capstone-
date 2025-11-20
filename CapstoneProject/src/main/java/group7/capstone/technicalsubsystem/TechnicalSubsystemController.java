@@ -20,15 +20,12 @@ public class TechnicalSubsystemController {
         world.step(dt);
     }
 
-    public float getSpeedKmh() {
-        return car.getSpeed();
-    }
+    public float getSpeedKmh() {return car.getSpeed();}
 
-    public String getPositionString() {
-        return car.getPosition().toString();
-    }
+    public String getPositionString() {return car.getPosition().toString();}
 
-    public com.jme3.math.Vector3f getPosition() {
-        return car.getPosition();
-    }
+
+    public String getOrientationString() {return car.getCompassDirection(); }
+
+    public com.jme3.math.Vector3f getPosition() { return car.getPosition();}
 }

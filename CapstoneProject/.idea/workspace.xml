@@ -5,13 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/VehicleConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/group7/capstone/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/CarObject.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/CarObject.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/MapObject.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/MapObject.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/TechnicalSubsystemController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/TechnicalSubsystemController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/VehiclePhysicsSystem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/VehiclePhysicsSystem.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
