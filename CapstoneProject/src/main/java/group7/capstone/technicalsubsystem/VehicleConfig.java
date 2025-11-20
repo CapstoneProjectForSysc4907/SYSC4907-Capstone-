@@ -12,6 +12,27 @@ public class VehicleConfig {
     private float maxSteeringAngleDeg = 30f;    // degrees
     private float wheelbase = 2.4f; //metres //This is the distacne between front and rear wheels
     private float maxSpeed = 200f; //km/h
+    private float maxAccelRate = 3000f;
+    private float maxBrakeRate = 8000f; // Newtons per second change
+
+    public float getMaxBrakeRate() {
+        return maxBrakeRate;
+    }
+
+    public void setMaxBrakeRate(float maxBrakeRate) {
+        this.maxBrakeRate = maxBrakeRate;
+    }
+
+
+
+
+    public float getMaxAccelRate() {
+        return maxAccelRate;
+    }
+
+    public void setMaxAccelRate(float maxAccelRate) {
+        this.maxAccelRate = maxAccelRate;
+    }
 
     private VehicleConfig(){
     }

@@ -38,7 +38,7 @@ public class CarObject {
 
     public void update(float throttle, float brake, float steering, float dt) {
         physics.steer(steering);
-        physics.changeSpeed(throttle, brake);
+        physics.changeSpeed(throttle, brake, dt);
         physics.updateSteering(dt);
     }
     public Vector3f getPosition() {
@@ -74,4 +74,6 @@ public class CarObject {
         if (degrees < 292.5) return ("W " + degrees +"° ");
         return "NW";
     }
+
+    public float getStopDistance(){return physics.calculateStoppingDistance(getSpeed());}
 }

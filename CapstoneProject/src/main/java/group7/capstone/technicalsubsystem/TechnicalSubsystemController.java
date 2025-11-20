@@ -28,4 +28,6 @@ public class TechnicalSubsystemController {
     public String getOrientationString() {return car.getCompassDirection(); }
 
     public com.jme3.math.Vector3f getPosition() { return car.getPosition();}
+
+    public float getStopDistance(){return car.getStopDistance();}
 }

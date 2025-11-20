@@ -11,23 +11,55 @@ public class VehiclePhysicsSystem {
     private VehicleConfig config;
     private float steeringAngleDeg;
     private final float metresSecondToKilometresPerHour = 3.6f;
+    private float currentEngineForce;
+    private float currentBrakeForce;
 
     public VehiclePhysicsSystem(PhysicsRigidBody body) {
         this.vehicleBody = body;
         config  = VehicleConfig.getInstance();
         steeringAngleDeg = 0f;
+        currentEngineForce = 0f;
+        currentBrakeForce = 0f;
     }
 
-    public void changeSpeed(float throttle, float brake) {
+    private void applyThrottle(float throttle, float dt) {
+        float targetForce = throttle * config.getMaxThrottleForce();
+
+        float maxForceChange = config.getMaxAccelRate() * dt;   // NEW config field
+
+        if (currentEngineForce < targetForce) {
+            currentEngineForce = Math.min(currentEngineForce + maxForceChange, targetForce);
+        } else {
+            currentEngineForce = Math.max(currentEngineForce - maxForceChange, targetForce);
+        }
+    }
+
+    private void applyBrake(float brakeInput, float dt) {
+        float targetBrake = brakeInput * config.getMaxBrakeForce();
+
+        float maxBrakeChange = config.getMaxBrakeRate() * dt; // NEW config field
+
+        if (currentBrakeForce < targetBrake) {
+            currentBrakeForce = Math.min(currentBrakeForce + maxBrakeChange, targetBrake);
+        } else {
+            currentBrakeForce = Math.max(currentBrakeForce - maxBrakeChange, targetBrake);
+        }
+    }
+
+
+    public void changeSpeed(float throttle, float brake, float dt) {
         /* throttle and brake are the percent of force one is using of the max
 
         /*
 
          */
+        applyThrottle(throttle, dt);
+        applyBrake(brake, dt);
 
         float currentSpeed = vehicleBody.getLinearVelocity().length(); //metres per second
-        float engineForce = throttle * config.getMaxThrottleForce(); //Newtons
-        float brakeForce = brake * config.getMaxBrakeForce(); //Newtons
+        float engineForce = currentEngineForce; //Newtons
+        float brakeForce  = currentBrakeForce; //Newtons
+
         float drag = config.getDragCoefficient() * currentSpeed * currentSpeed; //No unit
         float rolling = config.getRollingResistance() * currentSpeed; //Newtons
         //Rolling resistance has to do with the defomration of the tires and such
@@ -108,4 +140,11 @@ public class VehiclePhysicsSystem {
                 .multLocal(new com.jme3.math.Quaternion()
                         .fromAngleAxis(rotationAmount, Vector3f.UNIT_Y));
     }
+
+    public float calculateStoppingDistance(float speedKmh) {
+        float speed = speedKmh / 3.6f;
+        float decel = config.getMaxBrakeForce() / config.getMass();
+        return (speed * speed) / (2 * decel);
+    }
+
 }
