@@ -9,6 +9,7 @@ import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.material.Material;
 import com.jme3.math.Vector3f;
 
+
 public class MapObject {
 
     private final PhysicsSpace physicsSpace;

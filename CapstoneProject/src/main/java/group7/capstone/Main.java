@@ -1,36 +1,56 @@
 package group7.capstone;
+
 import com.jme3.system.NativeLibraryLoader;
-import group7.capstone.technicalsubsystem.CarObject;
-import group7.capstone.technicalsubsystem.MapObject;
-import com.jme3.bullet.util.NativeLibrary;
-
-
+import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 
 public class Main {
-    public static void main(String[] args) {
-        NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
-        MapObject map = new MapObject();
 
-        CarObject car = new CarObject("Car_01", map);
+    public static void main(String[] args) {
+
+        NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
+
+        TechnicalSubsystemController controller = new TechnicalSubsystemController();
 
         float dt = 1f / 60f;
+
+        System.out.println("=== Phase 1: Acceleration + Braking ===");
+
         for (int i = 0; i < 600; i++) {
+
             float time = i * dt;
 
             float throttle = (time < 5f) ? 1f : 0f;
             float brake    = (time >= 5f) ? 1f : 0f;
+            float steering = 0f;
 
-            car.accelerate(throttle);
-            car.brake(brake);
-
-            map.step(dt);
+            controller.update(throttle, brake, steering, dt);
 
             if (i % 60 == 0) {
-                System.out.printf("t=%.1fs  pos=%s  speed=%.1f km/h%n",
-                        time, car.getPosition(), car.getSpeed());
+                System.out.printf("t=%.1fs  pos=%s  speed=%.1f km/h%n",time, controller.getPositionString(), controller.getSpeedKmh());
             }
         }
 
-        System.out.println("Done");
+        System.out.println("\n=== Phase 2: Steering Test ===");
+
+        for (int i = 0; i < 600; i++) {
+
+            float time = 10f + i * dt;
+
+            float throttle = 0.5f;
+            float brake = 0f;
+
+            float steering;
+            if (time < 13f) steering = 1f;
+            else if (time < 16f) steering = -1f;
+            else steering = 0f;
+
+            controller.update(throttle, brake, steering, dt);
+
+            if (i % 60 == 0) {
+                System.out.printf("t=%.1fs  pos=%s  speed=%.1f km/h%n", time, controller.getPositionString(),  controller.getSpeedKmh());
+            }
         }
+
+        System.out.println("Simulation complete.");
     }
+}
