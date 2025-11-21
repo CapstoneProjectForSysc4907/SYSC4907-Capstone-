@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/group7/capstone/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/MapObject.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/technicalsubsystem/MapObject.java" afterDir="false" />
-    </list>
+    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -19,27 +14,28 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="JUnit5 Test Class" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "BrockFielder"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;BrockFielder&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/CapstoneProjectForSysc4907/SYSC4907-Capstone-.git",
-    "accountId": "82aa5d90-ebd6-49bc-952d-c6ea241c6be3"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/CapstoneProjectForSysc4907/SYSC4907-Capstone-.git&quot;,
+    &quot;accountId&quot;: &quot;82aa5d90-ebd6-49bc-952d-c6ea241c6be3&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 1
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
   <component name="ProjectId" id="35LMx1aLqVxSl4zw5ruW3GkoJnP" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -48,14 +44,29 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.Main.executor": "Run",
+    "JUnit.VehiclePhysicsIntegrationTest.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
     "git-widget-placeholder": "BrockBranch",
     "kotlin-language-version-configured": "true",
-    "onboarding.tips.debug.path": "C:/Users/brock/OneDrive/Documents/GitHub/Capstone/SYSC4907-Capstone-/CapstoneProject/src/main/java/org/example/Main.java"
+    "last_opened_file_path": "C:/Users/brock/OneDrive/Documents/GitHub/Capstone/SYSC4907-Capstone-/CapstoneProject",
+    "onboarding.tips.debug.path": "C:/Users/brock/OneDrive/Documents/GitHub/Capstone/SYSC4907-Capstone-/CapstoneProject/src/main/java/org/example/Main.java",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="group7.capstone.technicalsubsystem" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

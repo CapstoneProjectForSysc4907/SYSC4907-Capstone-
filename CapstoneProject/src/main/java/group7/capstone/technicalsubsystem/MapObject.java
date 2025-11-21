@@ -9,6 +9,7 @@ import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.material.Material;
 import com.jme3.math.Vector3f;
 
+/// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
 public class MapObject {
 
     private final PhysicsSpace physicsSpace;
@@ -17,7 +18,7 @@ public class MapObject {
         physicsSpace = new PhysicsSpace(PhysicsSpace.BroadphaseType.DBVT);
         physicsSpace.setGravity(new Vector3f(0, -9.81f, 0));
 
-        BoxCollisionShape groundShape = new BoxCollisionShape(new Vector3f(200f, 0.5f, 200f));
+        BoxCollisionShape groundShape = new BoxCollisionShape(new Vector3f(100000f, 0.5f, 10000f));
         PhysicsRigidBody ground = new PhysicsRigidBody(groundShape, 0f);
         ground.setPhysicsLocation(new Vector3f(0, -0.5f, 0));
         physicsSpace.addCollisionObject(ground);
