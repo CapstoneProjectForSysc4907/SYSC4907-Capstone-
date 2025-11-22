@@ -4,11 +4,26 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="" />
+    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/cache_config.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/CacheManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/CacheManagerDemo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/CachedMapData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/GoogleMapsAPIController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/RoadSegment.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/StreetViewImage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/Waypoint.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/group7/capstone/caching/CacheManagerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -44,15 +59,17 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.Main.executor": "Run",
+    "JUnit.CacheManagerTest.executor": "Run",
     "JUnit.VehiclePhysicsIntegrationTest.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
-    "git-widget-placeholder": "BrockBranch",
+    "git-widget-placeholder": "ZachBranch",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/brock/OneDrive/Documents/GitHub/Capstone/SYSC4907-Capstone-/CapstoneProject",
+    "node.js.selected.package.tslint": "(autodetect)",
     "onboarding.tips.debug.path": "C:/Users/brock/OneDrive/Documents/GitHub/Capstone/SYSC4907-Capstone-/CapstoneProject/src/main/java/org/example/Main.java",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.0",
@@ -63,9 +80,36 @@
     <key name="CreateTestDialog.Recents.Supers">
       <recent name="" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\zachg\OneDrive\Documents\School\Capstone\SYSC4907-Capstone-\CapstoneProject\src\test\java\group7\capstone\caching" />
+      <recent name="C:\Users\zachg\OneDrive\Documents\School\Capstone\SYSC4907-Capstone-\CapstoneProject\src\main\java\group7\capstone\caching" />
+      <recent name="C:\Users\zachg\OneDrive\Documents\School\Capstone\SYSC4907-Capstone-\CapstoneProject" />
+    </key>
     <key name="CreateTestDialog.RecentsKey">
       <recent name="group7.capstone.technicalsubsystem" />
     </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="CacheManagerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="CapstoneProject" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="group7.capstone.caching.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="group7.capstone.caching" />
+      <option name="MAIN_CLASS_NAME" value="group7.capstone.caching.CacheManagerTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.CacheManagerTest" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
