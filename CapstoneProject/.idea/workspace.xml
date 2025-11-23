@@ -4,18 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/cache_config.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/CacheManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/CacheManagerDemo.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/CachedMapData.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/GoogleMapsAPIController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/RoadSegment.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/StreetViewImage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/group7/capstone/caching/Waypoint.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/group7/capstone/caching/CacheManagerTest.java" afterDir="false" />
+    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,6 +48,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.CacheManagerDemo.executor": "Run",
     "Application.Main.executor": "Run",
     "JUnit.CacheManagerTest.executor": "Run",
     "JUnit.VehiclePhysicsIntegrationTest.executor": "Run",
@@ -89,7 +80,20 @@
       <recent name="group7.capstone.technicalsubsystem" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.CacheManagerDemo">
+    <configuration name="CacheManagerDemo" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="group7.capstone.caching.CacheManagerDemo" />
+      <module name="CapstoneProject" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="group7.capstone.caching.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="CacheManagerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="CapstoneProject" />
       <extension name="coverage">
@@ -107,6 +111,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.CacheManagerDemo" />
         <item itemvalue="JUnit.CacheManagerTest" />
       </list>
     </recent_temporary>
@@ -126,7 +131,20 @@
       <option name="presentableId" value="Default" />
       <updated>1762885144064</updated>
     </task>
+    <task id="LOCAL-00001" summary="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have">
+      <option name="closed" value="true" />
+      <created>1763855451889</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1763855451889</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have" />
+    <option name="LAST_COMMIT_MESSAGE" value="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

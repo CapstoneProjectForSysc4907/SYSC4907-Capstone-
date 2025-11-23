@@ -212,62 +212,23 @@ public class CacheManager {
             LOGGER.warning("Cannot preload: waypoints list is empty");
             return;
         }
-        
+
         LOGGER.info(String.format("Preloading data for %d waypoints (distance: %.1fkm)",
                 waypoints.size(), preloadDistanceKm));
-        
+
         for (Waypoint waypoint : waypoints) {
-            //preload data at this waypoint
+            //Preload data at this waypoint
             cacheRoadData(
                     waypoint.getLatitude(),
                     waypoint.getLongitude(),
                     preloadDistanceKm
             );
-            
-            //also preload data ahead of this waypoint
-            if (waypoints.indexOf(waypoint) < waypoints.size() - 1) {
-                Waypoint next = waypoints.get(waypoints.indexOf(waypoint) + 1);
-                List<Waypoint> intermediatePoints = generateIntermediatePoints(waypoint, next, 0.5);
-                
-                for (Waypoint point : intermediatePoints) {
-                    cacheRoadData(
-                            point.getLatitude(),
-                            point.getLongitude(),
-                            preloadDistanceKm
-                    );
-                }
-            }
         }
-        
+
         LOGGER.info("Preloading complete");
     }
     
-    /**
-     * Generate intermediate waypoints between two points
-     * @param start Start waypoint
-     * @param end End waypoint
-     * @param intervalKm Distance between points in km
-     * @return List of intermediate waypoints
-     */
-    private List<Waypoint> generateIntermediatePoints(Waypoint start, Waypoint end, double intervalKm) {
-        List<Waypoint> points = new ArrayList<>();
-        
-        double distance = start.distanceTo(end);
-        int numPoints = (int) Math.ceil(distance / intervalKm);
-        
-        if (numPoints <= 1) {
-            return points;
-        }
-        
-        for (int i = 1; i < numPoints; i++) {
-            double fraction = (double) i / numPoints;
-            double lat = start.getLatitude() + fraction * (end.getLatitude() - start.getLatitude());
-            double lng = start.getLongitude() + fraction * (end.getLongitude() - start.getLongitude());
-            points.add(new Waypoint(lat, lng));
-        }
-        
-        return points;
-    }
+
     
     /**
      * clear all cached data
