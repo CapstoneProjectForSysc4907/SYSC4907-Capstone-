@@ -4,11 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="" />
+    <list default="true" id="58bc5024-18ca-467f-b678-e0506221707d" name="Changes" comment="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -43,16 +48,19 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.CacheManagerDemo.executor": "Run",
     "Application.Main.executor": "Run",
+    "JUnit.CacheManagerTest.executor": "Run",
     "JUnit.VehiclePhysicsIntegrationTest.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
-    "git-widget-placeholder": "BrockBranch",
+    "git-widget-placeholder": "ZachBranch",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/brock/OneDrive/Documents/GitHub/Capstone/SYSC4907-Capstone-/CapstoneProject",
+    "node.js.selected.package.tslint": "(autodetect)",
     "onboarding.tips.debug.path": "C:/Users/brock/OneDrive/Documents/GitHub/Capstone/SYSC4907-Capstone-/CapstoneProject/src/main/java/org/example/Main.java",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.0",
@@ -63,9 +71,50 @@
     <key name="CreateTestDialog.Recents.Supers">
       <recent name="" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\zachg\OneDrive\Documents\School\Capstone\SYSC4907-Capstone-\CapstoneProject\src\test\java\group7\capstone\caching" />
+      <recent name="C:\Users\zachg\OneDrive\Documents\School\Capstone\SYSC4907-Capstone-\CapstoneProject\src\main\java\group7\capstone\caching" />
+      <recent name="C:\Users\zachg\OneDrive\Documents\School\Capstone\SYSC4907-Capstone-\CapstoneProject" />
+    </key>
     <key name="CreateTestDialog.RecentsKey">
       <recent name="group7.capstone.technicalsubsystem" />
     </key>
+  </component>
+  <component name="RunManager" selected="Application.CacheManagerDemo">
+    <configuration name="CacheManagerDemo" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="group7.capstone.caching.CacheManagerDemo" />
+      <module name="CapstoneProject" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="group7.capstone.caching.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CacheManagerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="CapstoneProject" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="group7.capstone.caching.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="group7.capstone.caching" />
+      <option name="MAIN_CLASS_NAME" value="group7.capstone.caching.CacheManagerTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.CacheManagerDemo" />
+        <item itemvalue="JUnit.CacheManagerTest" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -82,7 +131,20 @@
       <option name="presentableId" value="Default" />
       <updated>1762885144064</updated>
     </task>
+    <task id="LOCAL-00001" summary="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have">
+      <option name="closed" value="true" />
+      <created>1763855451889</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1763855451889</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have" />
+    <option name="LAST_COMMIT_MESSAGE" value="I made as much as I could without action 3, so I ussed stub and a mock API to simulate what should be done. I followed the plan so this code migth require more testing in the future due to the fact Im not eve nsure what kind of data we'll have" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
