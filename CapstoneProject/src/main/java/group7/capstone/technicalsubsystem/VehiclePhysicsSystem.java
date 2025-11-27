@@ -1,6 +1,7 @@
 package group7.capstone.technicalsubsystem;
 
 import com.jme3.bullet.objects.PhysicsRigidBody;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 
 /// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
@@ -137,9 +138,17 @@ public class VehiclePhysicsSystem {
         float rotationAmount = angularVelocity * dt;
 
         //This below actually changes the rotation
-        vehicleBody.getPhysicsRotation()
-                .multLocal(new com.jme3.math.Quaternion()
-                        .fromAngleAxis(rotationAmount, Vector3f.UNIT_Y));
+        Quaternion currentRot = vehicleBody.getPhysicsRotation().clone();
+        Quaternion deltaRot = new com.jme3.math.Quaternion().fromAngleAxis(rotationAmount, Vector3f.UNIT_Y);
+        Quaternion newRot = deltaRot.mult(currentRot);
+        vehicleBody.setPhysicsRotation(newRot);
+
+        // Force velocity to follow the new forward direction
+        Vector3f forward = newRot.mult(Vector3f.UNIT_Z);
+        Vector3f currentVel = vehicleBody.getLinearVelocity();
+        float correctedSpeed = currentVel.length();
+        Vector3f correctedVel = forward.mult(correctedSpeed);
+        vehicleBody.setLinearVelocity(correctedVel);
     }
 
     public float calculateStoppingDistance(float speedKmh) {
