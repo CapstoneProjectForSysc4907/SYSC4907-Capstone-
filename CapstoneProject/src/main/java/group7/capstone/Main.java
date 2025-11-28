@@ -3,6 +3,7 @@ package group7.capstone;
 import com.jme3.system.NativeLibraryLoader;
 import group7.capstone.APIController.APIConfig;
 import group7.capstone.APIController.GoogleMapsAPIController;
+import group7.capstone.APIController.StreetViewImage;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 
 import javax.imageio.ImageIO;
@@ -18,10 +19,10 @@ public class Main {
 
         GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
 
-        BufferedImage image = controller1.GetStreetViewImage("45.53923474756772", "-76.71215350154397", "0");
+        StreetViewImage image = controller1.GetStreetViewImage("45.53923474756772", "-76.71215350154397", "0");
         try {
             File outputFile = new File("test.jpeg");
-            ImageIO.write(image, "jpeg", outputFile);
+            ImageIO.write(image.getImage(), "jpeg", outputFile);
             System.out.println("Image saved successfully to: " + "test.jpeg");
         } catch (IOException e) {
             System.err.println("Error saving image: " + e.getMessage());
