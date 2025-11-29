@@ -1,6 +1,9 @@
 package group7.capstone;
 
 import com.jme3.system.NativeLibraryLoader;
+import group7.capstone.APIController.APIConfig;
+import group7.capstone.APIController.GoogleMapsAPIController;
+import group7.capstone.APIController.StreetViewImage;
 import group7.capstone.technicalsubsystem.MapObject;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
@@ -8,10 +11,28 @@ import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 import group7.capstone.technicalsubsystem.VehiclePhysicsSystem;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        /*
+        demonstration for saving a test image
 
+        GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
+
+        StreetViewImage image = controller1.GetStreetViewImage("45.53923474756772", "-76.71215350154397", "0");
+        try {
+            File outputFile = new File("test.jpeg");
+            ImageIO.write(image.getImage(), "jpeg", outputFile);
+            System.out.println("Image saved successfully to: " + "test.jpeg");
+        } catch (IOException e) {
+            System.err.println("Error saving image: " + e.getMessage());
+        }
+        */
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
         TechnicalSubsystemController controller = new TechnicalSubsystemController();
