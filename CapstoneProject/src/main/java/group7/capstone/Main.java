@@ -2,6 +2,7 @@ package group7.capstone;
 
 import com.jme3.system.NativeLibraryLoader;
 import group7.capstone.APIController.APIConfig;
+import group7.capstone.APIController.APIStub;
 import group7.capstone.APIController.GoogleMapsAPIController;
 import group7.capstone.APIController.StreetViewImage;
 import group7.capstone.technicalsubsystem.MapObject;
@@ -21,18 +22,15 @@ public class Main {
     public static void main(String[] args) throws IOException {
         /*
         demonstration for saving a test image
-
+*/
         GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
+        //45.424061778387276,-75.40926382929229|45.42590246784146,-75.4102358132577
 
-        StreetViewImage image = controller1.GetStreetViewImage("45.53923474756772", "-76.71215350154397", "0");
-        try {
-            File outputFile = new File("test.jpeg");
-            ImageIO.write(image.getImage(), "jpeg", outputFile);
-            System.out.println("Image saved successfully to: " + "test.jpeg");
-        } catch (IOException e) {
-            System.err.println("Error saving image: " + e.getMessage());
-        }
-        */
+        //controller1.GetClosestStreetView("45.53923474756772", "-76.71215350154397", "0");,
+        //controller1.saveStreetViews("45.424061778387276","-75.40926382929229","45.42568923189714","-75.41011401787613", "350");
+        StreetViewImage img = APIStub.getClosestImage("45.53923474756772", "-76.71215350154397");
+        //img.saveImageToFile("png", "test2.png ");
+
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
         TechnicalSubsystemController controller = new TechnicalSubsystemController();
