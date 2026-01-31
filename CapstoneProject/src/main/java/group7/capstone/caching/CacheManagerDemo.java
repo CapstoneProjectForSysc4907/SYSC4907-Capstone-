@@ -118,9 +118,9 @@ public class CacheManagerDemo {
             
             //mock data
             List<RoadSegment> segments = new ArrayList<>();
-            segments.add(new RoadSegment(lat, lng, 50.0, "Main Street"));
-            segments.add(new RoadSegment(lat + 0.01, lng + 0.01, 60.0, "Highway 1"));
-            segments.add(new RoadSegment(lat - 0.01, lng + 0.01, 40.0, "Blues Avenue"));
+           // segments.add(new RoadSegment(lat, lng, 50.0, "Main Street"));
+          //  segments.add(new RoadSegment(lat + 0.01, lng + 0.01, 60.0, "Highway 1"));
+          //  segments.add(new RoadSegment(lat - 0.01, lng + 0.01, 40.0, "Blues Avenue"));
             
             return segments;
         }

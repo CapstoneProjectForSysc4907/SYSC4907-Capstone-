@@ -9,10 +9,19 @@ public class TechnicalSubsystemController {
 
     private final MapObject world;
     private final CarObject car;
+    private final RoadDataHolder roadData = RoadDataHolder.getInstance();
 
     public TechnicalSubsystemController() {
         this.world = new MapObject();
         this.car = new CarObject("Car_01", world);
+    }
+
+    public void getRoadData(RoadSegment road) {
+        roadData.getRoadList();
+    }
+
+    public void addRoadData(RoadSegment road) {
+        roadData.addRoadData(road);
     }
 
     public void update(float throttle, float brake, float steering, float dt) {

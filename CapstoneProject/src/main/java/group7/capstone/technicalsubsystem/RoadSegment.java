@@ -4,36 +4,24 @@ import com.jme3.math.Vector3f;
 
 public class RoadSegment {
 
-    private final Vector3f startPoint;
-    private final Vector3f endPoint;
+    private final double latitude;
+    private final double longitude;
 
-    // Hard-coded for now
-    private final int laneCount = 2;
-    private final float laneWidth = 3f; // 2 lanes × 3m each = 6m wide
-    private final float speedLimit = 20f; // m/s (about 72 km/h)
-
-    public RoadSegment(Vector3f startPoint, Vector3f endPoint) {
-        this.startPoint = startPoint;
-        this.endPoint = endPoint;
+    private RoadSegment(double latitude, double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
-    public float getLength() {
-        return startPoint.distance(endPoint);
+    public double getLatitude() {
+        return latitude;
     }
 
-    public int getLaneCount() {
-        return laneCount;
+    public double getLongitude() {
+        return longitude;
     }
 
-    public float getLaneWidth() {
-        return laneWidth;
-    }
-
-    public Vector3f getStartPoint() {
-        return startPoint;
-    }
-
-    public Vector3f getEndPoint() {
-        return endPoint;
+    @Override
+    public String toString() {
+        return String.format("(%.6f, %.6f)", latitude, longitude);
     }
 }
