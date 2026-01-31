@@ -1,82 +1,101 @@
 package group7.capstone;
 
 import com.jme3.system.NativeLibraryLoader;
-import group7.capstone.APIController.APIConfig;
+import group7.capstone.APIController.APIResponseDomain;
 import group7.capstone.APIController.APIStub;
 import group7.capstone.APIController.GoogleMapsAPIController;
 import group7.capstone.APIController.StreetViewImage;
-import group7.capstone.technicalsubsystem.MapObject;
+import group7.capstone.technicalsubsystem.RoadSegment;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
-import com.jme3.bullet.collision.shapes.BoxCollisionShape;
-import com.jme3.bullet.objects.PhysicsRigidBody;
-import com.jme3.math.Vector3f;
-import group7.capstone.technicalsubsystem.VehiclePhysicsSystem;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
-        /*
-        demonstration for saving a test image
-*/
-        GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
-        //45.424061778387276,-75.40926382929229|45.42590246784146,-75.4102358132577
 
-        //controller1.GetClosestStreetView("45.53923474756772", "-76.71215350154397", "0");,
-        //controller1.saveStreetViews("45.424061778387276","-75.40926382929229","45.42568923189714","-75.41011401787613", "350");
-        StreetViewImage img = APIStub.getClosestImage("45.53923474756772", "-76.71215350154397");
-        //img.saveImageToFile("png", "test2.png ");
+        // --- Optional: API demo (wrap so it doesn't kill the physics smoke test) ---
+        try {
+            GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
+            StreetViewImage img = APIStub.getClosestImage("45.53923474756772", "-76.71215350154397");
+            // img.saveImageToFile("png", "test.png");
+        } catch (Exception e) {
+            System.out.println("[WARN] Skipping StreetView stub demo: " + e.getMessage());
+        }
 
+        // Bullet native
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
+        // --- Create subsystem controller ---
         TechnicalSubsystemController controller = new TechnicalSubsystemController();
 
-      /*  float dt = 1f / 60f;
+        // --- Inject fake "Snap-to-Roads" data ---
+        APIResponseDomain fake = fakeSnapResponse_OttawaStraightThenTurn();
+        injectFakeRoadFromSnapResponse(controller, fake);
 
-        System.out.println("=== Phase 1: Acceleration + Braking ===");
+        // --- IMPORTANT: rebuild roads so MapObject uses the injected points ---
+        // (rename if your method is rebuildWorldRoads(), rebuildRoadsFromHolder(), etc.)
+        controller.rebuildRoads();
 
-        for (int i = 0; i < 600; i++) {
-
-            float time = i * dt;
-
-            float throttle = (time < 5f) ? 1f : 0f;
-            float brake    = (time >= 5f) ? 1f : 0f;
-            float steering = 0f;
-
-            controller.update(throttle, brake, steering, dt);
-
-            if (i % 60 == 0) {
-                System.out.printf("Time: " + time + " Dir: " + controller.getOrientationString() + " speed: " +  controller.getSpeedKmh() + " km/h " + " pos: " + controller.getPositionString() +"\n");
-            }
-        }
-
-        System.out.println("\n=== Phase 2: Steering Test ===");
-
-        for (int i = 0; i < 1800; i++) {  // 30 seconds at 60 FPS
-
-            float time = 10f + i * dt;
-
-            float throttle = 1.0f;   // FULL throttle to make turning real
-            float brake = 0f;
-
-            float steering;
-            if (time < 20f) steering = 1f;        // turn left for 10 seconds
-            else if (time < 25f) steering = -1f;  // then right for 5 seconds
-            else steering = 0f;                   // straighten
-
-            controller.update(throttle, brake, steering, dt);
-
-            if (i % 60 == 0) {
-                System.out.printf("Time: " + time + " Dir: " + controller.getOrientationString() + " speed: " +  controller.getSpeedKmh() + " km/h " + " pos: " + controller.getPositionString() +"\n" );
-            }
-        }
-
-        System.out.println("Simulation complete.");*/
+        // --- Run your drive test ---
         testDrive(controller);
+    }
+
+    private static APIResponseDomain fakeSnapResponse_OttawaStraightThenTurn() {
+        APIResponseDomain api = new APIResponseDomain();
+        List<APIResponseDomain.SnappedPoint> points = new ArrayList<>();
+
+        double baseLat = 45.4215;
+        double baseLon = -75.6972;
+
+        // Segment A: north
+        for (int i = 0; i < 25; i++) {
+            points.add(makeSnappedPoint(baseLat + i * 0.00005, baseLon, i));
+        }
+
+        // Segment B: east
+        double turnLat = baseLat + 24 * 0.00005;
+        for (int i = 1; i <= 25; i++) {
+            points.add(makeSnappedPoint(turnLat, baseLon + i * 0.00005, 25 + i));
+        }
+
+        api.setSnappedPoints(points);
+        return api;
+    }
+
+    private static APIResponseDomain.SnappedPoint makeSnappedPoint(double lat, double lon, int idx) {
+        APIResponseDomain.LatLng latLng = new APIResponseDomain.LatLng();
+        latLng.setLatitude(lat);
+        latLng.setLongitude(lon);
+
+        APIResponseDomain.SnappedPoint sp = new APIResponseDomain.SnappedPoint();
+        sp.setLocation(latLng);
+        sp.setOriginalIndex(idx);
+        sp.setPlaceId("fake_" + idx);
+
+        return sp;
+    }
+
+    private static void injectFakeRoadFromSnapResponse(TechnicalSubsystemController controller, APIResponseDomain api) {
+        if (api == null || api.getSnappedPoints() == null || api.getSnappedPoints().size() < 2) {
+            System.out.println("No snapped points to inject; using hardcoded road fallback inside MapObject.");
+            return;
+        }
+
+        int count = 0;
+        for (APIResponseDomain.SnappedPoint sp : api.getSnappedPoints()) {
+            if (sp == null || sp.getLocation() == null) continue;
+
+            double lat = sp.getLocation().getLatitude();
+            double lon = sp.getLocation().getLongitude();
+
+            controller.addRoadData(new RoadSegment(lat, lon));
+            count++;
+        }
+
+        System.out.println("Injected snapped points into RoadDataHolder: " + count);
     }
 
     public static void testDrive(TechnicalSubsystemController controller) {
@@ -94,12 +113,10 @@ public class Main {
 
             if (simTime < 5f) {
                 throttle = 1.0f;
-            }
-            else if (simTime < 14f) {
+            } else if (simTime < 14f) {
                 throttle = 1.0f;
-                steering = 1.0f;
-            }
-            else {
+                steering = 0.25f; // was 1.0f; smaller steering makes the test less chaotic
+            } else {
                 brake = 1.0f;
             }
 
@@ -110,7 +127,7 @@ public class Main {
                 System.out.println(
                         "t=" + String.format("%.2f", simTime) +
                                 "s | Pos=" + controller.getPosition() +
-                                " | Speed=" + String.format("%.1f", controller.getSpeedKmh()) + " km/h" +
+                                " | Speed=" + String.format("%.1f", controller.getSpeedKmh()) +
                                 " | Dir=" + controller.getOrientationString()
                 );
             }
@@ -118,8 +135,4 @@ public class Main {
 
         System.out.println("---- Road Test Complete ----");
     }
-
-
-
-
 }

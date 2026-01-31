@@ -214,8 +214,8 @@ class CacheManagerTest {
             callCount++;
             //mock road segments
             List<RoadSegment> segments = new ArrayList<>();
-            segments.add(new RoadSegment(lat, lng, 50.0, "Mock Street"));
-            segments.add(new RoadSegment(lat + 0.01, lng + 0.01, 60.0, "Mock Avenue"));
+            //segments.add(new RoadSegment(lat, lng, 50.0, "Mock Street"));
+          //  segments.add(new RoadSegment(lat + 0.01, lng + 0.01, 60.0, "Mock Avenue"));
             
             return segments;
         }
