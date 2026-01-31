@@ -7,7 +7,7 @@ public class RoadSegment {
     private final double latitude;
     private final double longitude;
 
-    private RoadSegment(double latitude, double longitude) {
+    public RoadSegment(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }

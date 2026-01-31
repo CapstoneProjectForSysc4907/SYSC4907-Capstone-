@@ -3,7 +3,13 @@ package group7.capstone.technicalsubsystem;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
+import com.jme3.math.Vector3f;import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.objects.PhysicsRigidBody;
+
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,46 +105,69 @@ public class MapObject {
      */
     private void buildRoadColliderAndWalls(PhysicsRoadSegment seg) {
 
-        float halfLength = seg.getLength() / 2f;
-        float halfWidth = (seg.getLaneCount() * seg.getLaneWidth()) / 2f;
-
         Vector3f start = seg.getStartPoint();
         Vector3f end   = seg.getEndPoint();
-        Vector3f midpoint = start.add(end).mult(0.5f);
+
+        Vector3f dir = end.subtract(start);
+        float length = dir.length();
+        if (length < 0.05f) return;
+
+        Vector3f forward = dir.normalize();                 // direction along the road
+        Vector3f right   = new Vector3f(forward.z, 0, -forward.x).normalize(); // perpendicular on XZ plane
+
+        Vector3f midpoint = start.add(end).mult(0.5f);      // midpoint
+
+        float halfLength = length / 2f;
+        float halfWidth  = (seg.getLaneCount() * seg.getLaneWidth()) / 2f;
+
+        // Yaw so that local +Z points along (forward)
+        float yaw = FastMath.atan2(forward.x, forward.z);
+        Quaternion rot = new Quaternion().fromAngleAxis(yaw, Vector3f.UNIT_Y);
 
         // -------------------- ROAD SURFACE COLLIDER ----------------
-        BoxCollisionShape roadShape =
-                new BoxCollisionShape(new Vector3f(halfLength, 0.1f, halfWidth));
+        // IMPORTANT: In local shape space:
+        // - use Z as "forward" (halfLength)
+        // - use X as "sideways" (halfWidth)
+        BoxCollisionShape roadShape = new BoxCollisionShape(new Vector3f(halfWidth, 0.1f, halfLength));
 
         PhysicsRigidBody roadBody = new PhysicsRigidBody(roadShape, 0f);
-        roadBody.setPhysicsLocation(midpoint);
+        roadBody.setPhysicsLocation(midpoint.clone());      // clone to avoid accidental mutation
+        roadBody.setPhysicsRotation(rot);
         physicsSpace.addCollisionObject(roadBody);
 
         // -------------------- WALLS ----------------
-        float wallHeight = 3f;         // 3 metres tall
-        float wallThickness = 0.2f;    // ~20 cm thick
+        float wallHeight = 3f;       // metres
+        float wallThickness = 0.2f;  // metres
 
+        // Local wall box: long along Z (forward), thick along X (sideways)
         BoxCollisionShape wallShape = new BoxCollisionShape(
-                new Vector3f(halfLength, wallHeight / 2f, wallThickness / 2f)
+                new Vector3f(wallThickness / 2f, wallHeight / 2f, halfLength)
         );
 
-        // IMPORTANT:
-        // These walls assume the road is "along Z" and width is "along X or Z"
-        // In your hardcoded road, halfWidth is Z thickness. In the geo conversion,
-        // local coords are X=east, Z=north. For a perfect wall placement you’d
-        // offset perpendicular to the segment direction. This is the simple version
-        // matching your existing axis-aligned demo.
+        Vector3f wallUp = new Vector3f(0, wallHeight / 2f, 0);
 
-        // LEFT WALL  (-halfWidth)
+        // LEFT wall at -right * halfWidth
         PhysicsRigidBody leftWall = new PhysicsRigidBody(wallShape, 0f);
-        leftWall.setPhysicsLocation(midpoint.add(0, wallHeight / 2f, -halfWidth));
+        leftWall.setPhysicsLocation(midpoint.clone().add(wallUp).add(right.mult(-halfWidth)));
+        leftWall.setPhysicsRotation(rot);
         physicsSpace.addCollisionObject(leftWall);
 
-        // RIGHT WALL  (+halfWidth)
+        // RIGHT wall at +right * halfWidth
         PhysicsRigidBody rightWall = new PhysicsRigidBody(wallShape, 0f);
-        rightWall.setPhysicsLocation(midpoint.add(0, wallHeight / 2f, +halfWidth));
+        rightWall.setPhysicsLocation(midpoint.clone().add(wallUp).add(right.mult(+halfWidth)));
+        rightWall.setPhysicsRotation(rot);
         physicsSpace.addCollisionObject(rightWall);
     }
+
+    public void rebuildRoadsFromHolder() {
+        activeSegments.clear();
+
+        // TODO: ideally remove old rigidbodies too (later)
+        if (!tryBuildRoadFromRoadData()) {
+            createHardcodedRoad();
+        }
+    }
+
 
     public PhysicsSpace getPhysicsSpace() {
         return physicsSpace;
