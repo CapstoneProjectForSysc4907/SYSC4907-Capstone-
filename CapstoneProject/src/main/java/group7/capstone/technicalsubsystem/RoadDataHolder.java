@@ -25,6 +25,13 @@ public class RoadDataHolder {
         return road;
     }
 
+    public ArrayList<RoadSegment> emptyRoad(){
+        ArrayList<RoadSegment> oldRoads = new ArrayList<>();
+        oldRoads.addAll(roadList);
+        roadList.clear();
+        return oldRoads;
+    }
+
     public ArrayList<RoadSegment> getRoadList() {
         return roadList;
     }
