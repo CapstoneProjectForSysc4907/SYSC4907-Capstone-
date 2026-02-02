@@ -8,9 +8,14 @@ import okhttp3.*;
 import javax.imageio.ImageIO;
 import com.opencsv.CSVWriter;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -56,10 +61,27 @@ public class GoogleMapsAPIController {
         }
     }
 
-    public void saveStreetViews(String lat, String lon, String lat2, String lon2, String head){
+    public double[] calculateNewCoords(double lat, double lon, String head){
+        double dist = 0.0005;
+        double rHead = (Double.parseDouble(head))*Math.PI/180;
+        double newlat = lat + Math.cos(rHead) * dist;
+        double newlon = lon + Math.sin(rHead) * dist;
+        return new double[]{newlat, newlon};
+    }
+
+    public String getPath(double lat, double lon, String head, int steps){
+        String newPath = lat + "," + lon;
+        double[] next = calculateNewCoords(lat,lon,head);
+        if (steps > 0){
+            newPath += "|" + getPath(next[0],next[1],head,steps-1);
+        }
+        return newPath;
+    }
+
+    public void saveStreetViews(String lat, String lon, String head){
         logger.info("finding closest road to: lat=" + lat + ", lon=" + lon);
         //String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=45.424061778387276,-75.40926382929229|45.42590246784146,-75.4102358132577&key=" + APIConfig.getAPIKey();
-        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + lat + "," + lon + "|" + lat2 + "," + lon2 + "&key=" + APIConfig.getAPIKey();
+        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(Double.parseDouble(lat),Double.parseDouble(lon),head,40) + "&key=" + APIConfig.getAPIKey();
         System.out.println(url);
         Request request = new Request.Builder()
                 .url(url)
@@ -73,6 +95,16 @@ public class GoogleMapsAPIController {
             String newLon = "";
             int num = 0;
             List<String[]> data = new ArrayList<>();
+
+            try {
+                FileWriter myWriter = new FileWriter("preload/response.txt");
+                myWriter.write(jsonResponseObject.toString());
+                myWriter.close();  // must close manually
+                System.out.println("Successfully wrote to the file.");
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
 
             String filePath = "preload/imagefinder.csv";
 
