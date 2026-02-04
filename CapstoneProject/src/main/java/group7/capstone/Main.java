@@ -17,13 +17,15 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         // --- Optional: API demo (wrap so it doesn't kill the physics smoke test) ---
-        try {
+        //try {
             GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
+            APIResponseDomain responseDomain = controller1.getStreet(45.53923474756772, -76.71215350154397,338);
+            System.out.println(responseDomain.getSnappedPoints().size());
             StreetViewImage img = APIStub.getClosestImage("45.53923474756772", "-76.71215350154397");
             // img.saveImageToFile("png", "test.png");
-        } catch (Exception e) {
-            System.out.println("[WARN] Skipping StreetView stub demo: " + e.getMessage());
-        }
+        //} catch (Exception e) {
+            //System.out.println("[WARN] Skipping StreetView stub demo: " + e.getMessage());
+        //}
 
         // Bullet native
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);

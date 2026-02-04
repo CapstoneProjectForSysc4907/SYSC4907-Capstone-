@@ -3,6 +3,8 @@ package group7.capstone.APIController;
 import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import group7.capstone.caching.RoadSegment;
+import group7.capstone.caching.StreetViewImage;
 import okhttp3.*;
 
 import javax.imageio.ImageIO;
@@ -36,7 +38,7 @@ public class GoogleMapsAPIController {
         }
     }
 
-    public StreetViewImage GetStreetViewImage(String lat, String lon, String head) throws IOException {
+    public StreetViewImage GetStreetViewImage(double lat, double lon, int head) throws IOException {
         /*
         gets an image from the google maps static streetview api
         latitude and longitude are in degrees from prime meridian and equator
@@ -53,23 +55,23 @@ public class GoogleMapsAPIController {
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;
             logger.info("result returned is probably image");
-            return new StreetViewImage(ImageIO.read(response.body().byteStream()), Float.parseFloat(lat),
-                    Float.parseFloat(lon), Integer.parseInt(head));
+            return new StreetViewImage(response.body().bytes(), head, lat,
+                    lon);
         } catch (IOException e) {
             logger.warning("google api call failed");
             throw new RuntimeException(e);
         }
     }
 
-    public double[] calculateNewCoords(double lat, double lon, String head){
+    public double[] calculateNewCoords(double lat, double lon, int head){
         double dist = 0.0005;
-        double rHead = (Double.parseDouble(head))*Math.PI/180;
+        double rHead = head*Math.PI/180;
         double newlat = lat + Math.cos(rHead) * dist;
         double newlon = lon + Math.sin(rHead) * dist;
         return new double[]{newlat, newlon};
     }
 
-    public String getPath(double lat, double lon, String head, int steps){
+    public String getPath(double lat, double lon, int head, int steps){
         String newPath = lat + "," + lon;
         double[] next = calculateNewCoords(lat,lon,head);
         if (steps > 0){
@@ -78,56 +80,60 @@ public class GoogleMapsAPIController {
         return newPath;
     }
 
-    public void saveStreetViews(String lat, String lon, String head){
+    public APIResponseDomain getStreet(double lat, double lon, int head) {
         logger.info("finding closest road to: lat=" + lat + ", lon=" + lon);
         //String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=45.424061778387276,-75.40926382929229|45.42590246784146,-75.4102358132577&key=" + APIConfig.getAPIKey();
-        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(Double.parseDouble(lat),Double.parseDouble(lon),head,40) + "&key=" + APIConfig.getAPIKey();
+        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 40) + "&key=" + APIConfig.getAPIKey();
         System.out.println(url);
         Request request = new Request.Builder()
                 .url(url)
                 .build();
+
+        ArrayList<APIResponseDomain.SnappedPoint> segments = new ArrayList<>();
+        APIResponseDomain responseDomain = new APIResponseDomain();
+
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;
             logger.info("result returned properly");
             Map<String, Object> jsonResponseObject = new Gson().fromJson(response.body().charStream(), Map.class);
             ArrayList<Map> points = (ArrayList<Map>) jsonResponseObject.get("snappedPoints");
-            String newLat = "";
-            String newLon = "";
-            int num = 0;
-            List<String[]> data = new ArrayList<>();
+            Map<String, Object> location;
 
-            try {
-                FileWriter myWriter = new FileWriter("preload/response.txt");
-                myWriter.write(jsonResponseObject.toString());
-                myWriter.close();  // must close manually
-                System.out.println("Successfully wrote to the file.");
-            } catch (IOException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace();
-            }
-
-            String filePath = "preload/imagefinder.csv";
-
-            // Using try-with-resources to ensure the reader is closed
-            try (CSVReader reader = new CSVReader(new FileReader(filePath))) {
-                String[] nextLine;
-                while ((nextLine = reader.readNext()) != null) {
-                    // nextLine is an array of strings for the current line
-                    System.out.println(Arrays.toString(nextLine));
-                    data.add(nextLine);
-                    num += 1;
+            for (Map<String,Object> p: points) {
+                segments.add(new APIResponseDomain.SnappedPoint());
+                APIResponseDomain.SnappedPoint s = segments.get(segments.size() - 1);
+                s.setLocation(new APIResponseDomain.LatLng());
+                location = (Map<String, Object>) p.get("location");
+                s.getLocation().setLatitude((Double) location.get("latitude"));
+                s.getLocation().setLongitude((Double) location.get("longitude"));
+                s.setPlaceId((String) p.get("placeId"));
+                if(p.containsKey("originalIndex")){
+                    System.out.println("has origin");
+                    double index = (double) p.get("originalIndex");
+                    s.setOriginalIndex((int) index);
                 }
-            } catch (IOException | CsvValidationException e) {
-                e.printStackTrace();
             }
+            responseDomain.setSnappedPoints(segments);
+        } catch (IOException e) {
+            logger.warning("google api call failed");
+            throw new RuntimeException(e);
+        }
+        logger.info("exiting saveStreet function");
+        System.out.println(responseDomain.getSnappedPoints().size());
+        return responseDomain;
+    }
 
-            for(Map p : points){
-                Map location = (Map) p.get("location");
+
+    public void saveStreetViews(APIResponseDomain road, String head){
+        //saves the images in a file for testing purposes
+        /* TODO: fix after api controller changes.
+        int num = 0;
+
+        try{
+            for(APIResponseDomain.SnappedPoint p : road.getSnappedPoints()){
                 System.out.println(p.toString());
-                newLat = location.get("latitude").toString();
-                newLon = location.get("longitude").toString();
-                StreetViewImage image = GetStreetViewImage(newLat,newLon,head);
-                String imgName = p.get("placeId").toString() + num;
+                StreetViewImage image = GetStreetViewImage(p.getLocation().getLatitude(),p.getLocation().getLongitude(),head);
+                String imgName = p.getPlaceId() + num;
                 data.add(new String[]{newLat, newLon, head, imgName});
                 image.saveImageToFile("png", "preload/" + imgName);
                 num += 1;
@@ -142,5 +148,6 @@ public class GoogleMapsAPIController {
             logger.warning("google api call failed");
             throw new RuntimeException(e);
         }
+        */
     }
 }
