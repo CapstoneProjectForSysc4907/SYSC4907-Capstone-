@@ -37,8 +37,6 @@ public class CarObject {
         body.setFriction(frictionForRubberOnAsphalt);
         world.getPhysicsSpace().addCollisionObject(body);
         this.physics = new VehiclePhysicsSystem(body);
-
-        System.out.println("CAR OBJECT FROM CAR " + body.getObjectId());
     }
 
     public void debugSetSpeed (){
