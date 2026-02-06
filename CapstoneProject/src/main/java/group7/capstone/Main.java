@@ -1,6 +1,7 @@
 package group7.capstone;
 
 import com.jme3.system.NativeLibraryLoader;
+import com.jme3.math.Vector3f;
 import group7.capstone.APIController.APIResponseDomain;
 import group7.capstone.technicalsubsystem.RoadSegment;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
@@ -23,17 +24,17 @@ public class Main {
         APIResponseDomain fake = fakeSnapResponse_LongOttawaPolyline();
 
         // Print the polyline so we can see what it looks like
-        printPolyline(fake);
+        //printPolyline(fake);
 
         injectFakeRoadFromSnapResponse(controller, fake);
 
         // IMPORTANT: rebuild roads so MapObject uses the injected points
-        controller.rebuildRoads();
+//        controller.rebuildRoads();
 
-        // Smoke test (does NOT prove rail snapping; it just stresses the system)
+        // Smoke test
         runOffRoadStressSmokeTest(controller);
 
-        // Your original long stress test
+        // Long test
         runLongPolylineDriveTest(controller);
     }
 
@@ -130,8 +131,15 @@ public class Main {
         return sp;
     }
 
+    // ===================== Pretty formatting helpers =====================
+
+    private static String fmtV(Vector3f v) {
+        if (v == null) return "null";
+        return String.format("(%.2f, %.2f, %.2f)", v.x, v.y, v.z);
+    }
+
     // Polyline printer
-    private static void printPolyline(APIResponseDomain api) {
+    /*private static void printPolyline(APIResponseDomain api) {
         if (api == null || api.getSnappedPoints() == null || api.getSnappedPoints().isEmpty()) {
             System.out.println("[POLYLINE] No snapped points to print.");
             return;
@@ -190,7 +198,7 @@ public class Main {
         }
 
         System.out.println("---- END POLYLINE DUMP ----");
-    }
+    }*/
 
     private static void injectFakeRoadFromSnapResponse(TechnicalSubsystemController controller, APIResponseDomain api) {
         if (api == null || api.getSnappedPoints() == null || api.getSnappedPoints().size() < 2) {
@@ -212,11 +220,6 @@ public class Main {
         System.out.println("Injected snapped points into RoadDataHolder: " + count);
     }
 
-    /**
-     * This is ONLY a smoke test.
-     * It does not prove snapping, because we cannot measure "distance to road centreline"
-     * or forcibly displace the car using the current public controller API.
-     */
     private static void runOffRoadStressSmokeTest(TechnicalSubsystemController controller) {
         float simTime = 0f;
         float dt = 1f / 60f;
@@ -233,7 +236,6 @@ public class Main {
             float throttle = 0.9f;
             float brake    = 0f;
 
-            // Intentionally try to “leave the road”: hard steer one way, then the other.
             float steering;
             if (simTime < 10f) steering = 0.35f;
             else if (simTime < 20f) steering = -0.35f;
@@ -250,20 +252,32 @@ public class Main {
 
             if (simTime - lastPrint >= 0.5f) {
                 lastPrint = simTime;
+
                 System.out.println(
                         "t=" + String.format("%.2f", simTime) +
-                                "s | Pos=" + controller.getPosition() +
+                                "| tar poi:" + controller.closepoint() +  " "+
+                                "s | Pos=" + fmtV(controller.getPosition()) +
                                 " | Speed=" + String.format("%.1f", speed) +
                                 " | Dir=" + controller.getOrientationString() +
                                 " | thr=" + String.format("%.2f", throttle) +
                                 " br=" + String.format("%.2f", brake) +
-                                " st=" + String.format("%.2f", steering)
+                                " st=" + String.format("%.2f", steering) +
+                                " | Rail: engaged=" + controller.getRailEngaged() +
+                                " reason=" + controller.getRailReason() +
+                                " dist=" + String.format("%.2f", controller.getRailDistToCenter()) +
+                                " yawT=" + String.format("%.2f", controller.getRailYawTorqueMag()) +
+                                " latF=" + String.format("%.2f", controller.getRailLateralForceMag()) +
+                                " | target=" + fmtV(controller.getRailClosestPoint()) +
+                                " seg=[" + fmtV(controller.getRailSegStart()) + " -> " + fmtV(controller.getRailSegEnd()) + "]" +
+                                " toCenter=" + fmtV(controller.getRailToCenter()) +
+                                " latForce=" + fmtV(controller.getRailAppliedLateralForce()) +
+                                " torque=" + fmtV(controller.getRailAppliedTorque())
                 );
             }
 
             if (stuckTimer > 5f) {
                 System.out.println("[FAIL] Stuck: throttle high but speed < 1 km/h for >5s at t="
-                        + String.format("%.2f", simTime) + " pos=" + controller.getPosition());
+                        + String.format("%.2f", simTime) + " pos=" + fmtV(controller.getPosition()));
                 break;
             }
         }
@@ -271,7 +285,6 @@ public class Main {
         System.out.println("---- OFF-ROAD STRESS SMOKE TEST COMPLETE ----");
     }
 
-    // Your existing long test
     private static void runLongPolylineDriveTest(TechnicalSubsystemController controller) {
 
         float simTime = 0f;
@@ -328,24 +341,41 @@ public class Main {
             if (simTime - lastPrint >= 0.5f) {
                 lastPrint = simTime;
 
-                System.out.println(
-                        "t=" + String.format("%.2f", simTime) +
-                                "s | Pos=" + controller.getPosition() +
-                                " | Speed=" + String.format("%.1f", speed) +
-                                " | Dir=" + controller.getOrientationString() +
-                                " | thr=" + String.format("%.2f", throttle) +
-                                " br=" + String.format("%.2f", brake) +
-                                " st=" + String.format("%.2f", steering)
-                );
+                if (simTime - lastPrint >= 0.5f) {
+                    lastPrint = simTime;
+
+                    System.out.println(
+                            "t=" + String.format("%.2f", simTime) +
+                                    "s | Pos=" + fmtV(controller.getPosition()) +
+                                    " | Speed=" + String.format("%.1f", speed) +
+                                    " | Dir=" + controller.getOrientationString() +
+                                    " | thr=" + String.format("%.2f", throttle) +
+                                    " br=" + String.format("%.2f", brake) +
+                                    " st=" + String.format("%.2f", steering) +
+                                    " | Rail: engaged=" + controller.getRailEngaged() +
+                                    " reason=" + controller.getRailReason() +
+                                    " dist=" + String.format("%.2f", controller.getRailDistToCenter()) +
+                                    " segIdx=" + controller.getRailSegIndex() +
+                                    " t=" + String.format("%.3f", controller.getRailSegT()) +
+                                    " yawT=" + String.format("%.2f", controller.getRailYawTorqueMag()) +
+                                    " latF=" + String.format("%.2f", controller.getRailLateralForceMag()) +
+                                    " | target=" + fmtV(controller.getRailClosestPoint()) +
+                                    " seg=[" + fmtV(controller.getRailSegStart()) + " -> " + fmtV(controller.getRailSegEnd()) + "]" +
+                                    " toCenter=" + fmtV(controller.getRailToCenter()) +
+                                    " latForce=" + fmtV(controller.getRailAppliedLateralForce()) +
+                                    " torque=" + fmtV(controller.getRailAppliedTorque())
+                    );
+                }
+
             }
 
             if (stuckTimer > 5f) {
                 System.out.println("[FAIL] Stuck: throttle high but speed < 1 km/h for >5s at t="
-                        + String.format("%.2f", simTime) + " pos=" + controller.getPosition());
+                        + String.format("%.2f", simTime) + " pos=" + fmtV(controller.getPosition()));
                 break;
             }
         }
 
-        System.out.println("---- LONG Polyline Road Test Complete ----");
+        System.out.println("---- LONG Polyline Road Test Complete ---- ");
     }
 }
