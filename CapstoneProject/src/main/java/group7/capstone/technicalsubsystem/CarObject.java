@@ -3,6 +3,8 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 
+import java.util.List;
+
 /// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
 /// Carobject is the representation of the car itself. It is a high level representation that interacts with the physics
 /// This class is an integration layer between the VehiclePhysicsSystem and the Vechicle Config
@@ -37,6 +39,9 @@ public class CarObject {
         this.physics = new VehiclePhysicsSystem(body);
     }
 
+    public void debugSetSpeed (){
+        physics.debugSpeed();
+    }
     public void update(float throttle, float brake, float steering, float dt) {
         physics.steer(steering);
         physics.changeSpeed(throttle, brake, dt);
@@ -53,6 +58,11 @@ public class CarObject {
     public String getId() {
         return id;
     }
+
+    public List<Vector3f> getForces(){
+        return physics.debugGetForces();
+    }
+
 
     public String getCompassDirection() {
         Vector3f forward = body.getPhysicsRotation().mult(Vector3f.UNIT_Z);
@@ -75,6 +85,8 @@ public class CarObject {
         if (degrees < 292.5) return ("W " + degrees +"° ");
         return "NW";
     }
+
+    public PhysicsRigidBody getRigidBody() { return body; }
 
     public float getStopDistance(){return physics.calculateStoppingDistance(getSpeed());}
 }
