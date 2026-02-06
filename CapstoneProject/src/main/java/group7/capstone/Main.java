@@ -2,9 +2,6 @@ package group7.capstone;
 
 import com.jme3.system.NativeLibraryLoader;
 import group7.capstone.APIController.APIResponseDomain;
-import group7.capstone.APIController.APIStub;
-import group7.capstone.APIController.GoogleMapsAPIController;
-import group7.capstone.APIController.StreetViewImage;
 import group7.capstone.technicalsubsystem.RoadSegment;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 
@@ -16,53 +13,108 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        // --- Optional: API demo (wrap so it doesn't kill the physics smoke test) ---
-        try {
-            GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
-            StreetViewImage img = APIStub.getClosestImage("45.53923474756772", "-76.71215350154397");
-            // img.saveImageToFile("png", "test.png");
-        } catch (Exception e) {
-            System.out.println("[WARN] Skipping StreetView stub demo: " + e.getMessage());
-        }
-
         // Bullet native
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
         // --- Create subsystem controller ---
         TechnicalSubsystemController controller = new TechnicalSubsystemController();
 
-        // --- Inject fake "Snap-to-Roads" data ---
-        APIResponseDomain fake = fakeSnapResponse_OttawaStraightThenTurn();
+        // --- Inject a long fake polyline (multiple straights + turns) ---
+        APIResponseDomain fake = fakeSnapResponse_LongOttawaPolyline();
+
+        // Print the polyline so we can see what it looks like
+        printPolyline(fake);
+
         injectFakeRoadFromSnapResponse(controller, fake);
 
-        // --- IMPORTANT: rebuild roads so MapObject uses the injected points ---
-        // (rename if your method is rebuildWorldRoads(), rebuildRoadsFromHolder(), etc.)
+        // IMPORTANT: rebuild roads so MapObject uses the injected points
         controller.rebuildRoads();
 
-        // --- Run your drive test ---
-        testDrive(controller);
+        // Smoke test (does NOT prove rail snapping; it just stresses the system)
+        runOffRoadStressSmokeTest(controller);
+
+        // Your original long stress test
+        runLongPolylineDriveTest(controller);
     }
 
-    private static APIResponseDomain fakeSnapResponse_OttawaStraightThenTurn() {
+    /**
+     * Long polyline: like "drive north, turn east, turn north, turn west, etc."
+     */
+    private static APIResponseDomain fakeSnapResponse_LongOttawaPolyline() {
         APIResponseDomain api = new APIResponseDomain();
         List<APIResponseDomain.SnappedPoint> points = new ArrayList<>();
 
-        double baseLat = 45.4215;
-        double baseLon = -75.6972;
+        double lat = 45.4215;
+        double lon = -75.6972;
 
-        // Segment A: north
-        for (int i = 0; i < 25; i++) {
-            points.add(makeSnappedPoint(baseLat + i * 0.00005, baseLon, i));
-        }
+        double step = 0.00005;
+        int idx = 0;
 
-        // Segment B: east
-        double turnLat = baseLat + 24 * 0.00005;
-        for (int i = 1; i <= 25; i++) {
-            points.add(makeSnappedPoint(turnLat, baseLon + i * 0.00005, 25 + i));
-        }
+        idx = addSegment(points, lat, lon, +step, 0.0, 120, idx); // North
+        lat = lastLat(points);
+        lon = lastLon(points);
+
+        idx = addSegment(points, lat, lon, 0.0, +step, 140, idx); // East
+        lat = lastLat(points);
+        lon = lastLon(points);
+
+        idx = addSegment(points, lat, lon, +step, 0.0, 100, idx); // North
+        lat = lastLat(points);
+        lon = lastLon(points);
+
+        idx = addSegment(points, lat, lon, 0.0, -step, 160, idx); // West
+        lat = lastLat(points);
+        lon = lastLon(points);
+
+        idx = addSegment(points, lat, lon, +step, 0.0, 110, idx); // North
+        lat = lastLat(points);
+        lon = lastLon(points);
+
+        idx = addSegment(points, lat, lon, 0.0, +step, 90, idx); // East
+        lat = lastLat(points);
+        lon = lastLon(points);
+
+        idx = addSegment(points, lat, lon, -step, 0.0, 80, idx); // South
+        lat = lastLat(points);
+        lon = lastLon(points);
+
+        addSegment(points, lat, lon, 0.0, +step, 120, idx); // East
 
         api.setSnappedPoints(points);
         return api;
+    }
+
+    private static double lastLat(List<APIResponseDomain.SnappedPoint> pts) {
+        APIResponseDomain.SnappedPoint last = pts.get(pts.size() - 1);
+        return last.getLocation().getLatitude();
+    }
+
+    private static double lastLon(List<APIResponseDomain.SnappedPoint> pts) {
+        APIResponseDomain.SnappedPoint last = pts.get(pts.size() - 1);
+        return last.getLocation().getLongitude();
+    }
+
+    private static int addSegment(List<APIResponseDomain.SnappedPoint> points,
+                                  double startLat, double startLon,
+                                  double dLat, double dLon,
+                                  int count, int startIdx) {
+
+        double lat = startLat;
+        double lon = startLon;
+
+        if (points.isEmpty()) {
+            points.add(makeSnappedPoint(lat, lon, startIdx));
+            startIdx++;
+        }
+
+        for (int i = 0; i < count; i++) {
+            lat += dLat;
+            lon += dLon;
+            points.add(makeSnappedPoint(lat, lon, startIdx));
+            startIdx++;
+        }
+
+        return startIdx;
     }
 
     private static APIResponseDomain.SnappedPoint makeSnappedPoint(double lat, double lon, int idx) {
@@ -78,9 +130,71 @@ public class Main {
         return sp;
     }
 
+    // Polyline printer
+    private static void printPolyline(APIResponseDomain api) {
+        if (api == null || api.getSnappedPoints() == null || api.getSnappedPoints().isEmpty()) {
+            System.out.println("[POLYLINE] No snapped points to print.");
+            return;
+        }
+
+        List<APIResponseDomain.SnappedPoint> pts = api.getSnappedPoints();
+        int n = pts.size();
+
+        double minLat = Double.POSITIVE_INFINITY, maxLat = Double.NEGATIVE_INFINITY;
+        double minLon = Double.POSITIVE_INFINITY, maxLon = Double.NEGATIVE_INFINITY;
+
+        APIResponseDomain.SnappedPoint first = pts.get(0);
+        APIResponseDomain.SnappedPoint last  = pts.get(n - 1);
+
+        for (APIResponseDomain.SnappedPoint sp : pts) {
+            if (sp == null || sp.getLocation() == null) continue;
+            double lat = sp.getLocation().getLatitude();
+            double lon = sp.getLocation().getLongitude();
+            if (lat < minLat) minLat = lat;
+            if (lat > maxLat) maxLat = lat;
+            if (lon < minLon) minLon = lon;
+            if (lon > maxLon) maxLon = lon;
+        }
+
+        System.out.println("---- POLYLINE DUMP ----");
+        System.out.println("[POLYLINE] points=" + n);
+        System.out.println("[POLYLINE] bbox lat=[" + minLat + ", " + maxLat + "] lon=[" + minLon + ", " + maxLon + "]");
+        if (first != null && first.getLocation() != null) {
+            System.out.println("[POLYLINE] start idx=" + first.getOriginalIndex()
+                    + " lat=" + first.getLocation().getLatitude()
+                    + " lon=" + first.getLocation().getLongitude());
+        }
+        if (last != null && last.getLocation() != null) {
+            System.out.println("[POLYLINE] end   idx=" + last.getOriginalIndex()
+                    + " lat=" + last.getLocation().getLatitude()
+                    + " lon=" + last.getLocation().getLongitude());
+        }
+
+        int sampleEvery = Math.max(1, n / 40);
+        System.out.println("[POLYLINE] sample_every=" + sampleEvery);
+
+        for (int i = 0; i < n; i += sampleEvery) {
+            APIResponseDomain.SnappedPoint sp = pts.get(i);
+            if (sp == null || sp.getLocation() == null) continue;
+            System.out.println("[POLYLINE] i=" + i
+                    + " idx=" + sp.getOriginalIndex()
+                    + " lat=" + sp.getLocation().getLatitude()
+                    + " lon=" + sp.getLocation().getLongitude());
+        }
+
+        if (last != null && last.getLocation() != null) {
+            System.out.println("[POLYLINE] i=" + (n - 1)
+                    + " idx=" + last.getOriginalIndex()
+                    + " lat=" + last.getLocation().getLatitude()
+                    + " lon=" + last.getLocation().getLongitude());
+        }
+
+        System.out.println("---- END POLYLINE DUMP ----");
+    }
+
     private static void injectFakeRoadFromSnapResponse(TechnicalSubsystemController controller, APIResponseDomain api) {
         if (api == null || api.getSnappedPoints() == null || api.getSnappedPoints().size() < 2) {
-            System.out.println("No snapped points to inject; using hardcoded road fallback inside MapObject.");
+            System.out.println("[WARN] No snapped points to inject; using hardcoded road fallback inside MapObject.");
             return;
         }
 
@@ -98,41 +212,140 @@ public class Main {
         System.out.println("Injected snapped points into RoadDataHolder: " + count);
     }
 
-    public static void testDrive(TechnicalSubsystemController controller) {
+    /**
+     * This is ONLY a smoke test.
+     * It does not prove snapping, because we cannot measure "distance to road centreline"
+     * or forcibly displace the car using the current public controller API.
+     */
+    private static void runOffRoadStressSmokeTest(TechnicalSubsystemController controller) {
+        float simTime = 0f;
+        float dt = 1f / 60f;
+        float maxTime = 40f;
+
+        float lastPrint = -999f;
+        float stuckTimer = 0f;
+
+        System.out.println("---- Starting OFF-ROAD STRESS SMOKE TEST ----");
+        System.out.println("[NOTE] This does NOT prove rail snap-back. It only stresses steering + physics stability.");
+
+        while (simTime < maxTime) {
+
+            float throttle = 0.9f;
+            float brake    = 0f;
+
+            // Intentionally try to “leave the road”: hard steer one way, then the other.
+            float steering;
+            if (simTime < 10f) steering = 0.35f;
+            else if (simTime < 20f) steering = -0.35f;
+            else if (simTime < 30f) steering = 0.45f;
+            else steering = -0.45f;
+
+            controller.update(throttle, brake, steering, dt);
+            simTime += dt;
+
+            float speed = controller.getSpeedKmh();
+
+            if (throttle > 0.7f && speed < 1.0f) stuckTimer += dt;
+            else stuckTimer = 0f;
+
+            if (simTime - lastPrint >= 0.5f) {
+                lastPrint = simTime;
+                System.out.println(
+                        "t=" + String.format("%.2f", simTime) +
+                                "s | Pos=" + controller.getPosition() +
+                                " | Speed=" + String.format("%.1f", speed) +
+                                " | Dir=" + controller.getOrientationString() +
+                                " | thr=" + String.format("%.2f", throttle) +
+                                " br=" + String.format("%.2f", brake) +
+                                " st=" + String.format("%.2f", steering)
+                );
+            }
+
+            if (stuckTimer > 5f) {
+                System.out.println("[FAIL] Stuck: throttle high but speed < 1 km/h for >5s at t="
+                        + String.format("%.2f", simTime) + " pos=" + controller.getPosition());
+                break;
+            }
+        }
+
+        System.out.println("---- OFF-ROAD STRESS SMOKE TEST COMPLETE ----");
+    }
+
+    // Your existing long test
+    private static void runLongPolylineDriveTest(TechnicalSubsystemController controller) {
 
         float simTime = 0f;
         float dt = 1f / 60f;
+        float maxTime = 180f;
 
-        System.out.println("---- Starting TechnicalSubsystemController Road Test ----");
+        float lastPrint = -999f;
+        float stuckTimer = 0f;
 
-        while (simTime < 20f) {
+        System.out.println("---- Starting LONG Polyline Road Test ----");
+
+        controller.debugSpeed();
+
+        while (simTime < maxTime) {
 
             float throttle = 0f;
             float brake    = 0f;
             float steering = 0f;
 
-            if (simTime < 5f) {
+            if (simTime < 15f) {
                 throttle = 1.0f;
-            } else if (simTime < 14f) {
+                steering = 0.0f;
+            } else if (simTime < 45f) {
                 throttle = 1.0f;
-                steering = 0.25f; // was 1.0f; smaller steering makes the test less chaotic
+                steering = 0.18f;
+            } else if (simTime < 60f) {
+                throttle = 1.0f;
+                steering = 0.0f;
+            } else if (simTime < 90f) {
+                throttle = 0.9f;
+                steering = -0.18f;
+            } else if (simTime < 110f) {
+                throttle = 0.9f;
+                steering = 0.0f;
+            } else if (simTime < 140f) {
+                throttle = 0.85f;
+                steering = 0.22f;
+            } else if (simTime < 155f) {
+                throttle = 0.0f;
+                steering = 0.0f;
             } else {
                 brake = 1.0f;
+                steering = 0.0f;
             }
 
             controller.update(throttle, brake, steering, dt);
             simTime += dt;
 
-            if (((int)(simTime * 10)) % 5 == 0) {
+            float speed = controller.getSpeedKmh();
+
+            if (throttle > 0.7f && speed < 1.0f) stuckTimer += dt;
+            else stuckTimer = 0f;
+
+            if (simTime - lastPrint >= 0.5f) {
+                lastPrint = simTime;
+
                 System.out.println(
                         "t=" + String.format("%.2f", simTime) +
                                 "s | Pos=" + controller.getPosition() +
-                                " | Speed=" + String.format("%.1f", controller.getSpeedKmh()) +
-                                " | Dir=" + controller.getOrientationString()
+                                " | Speed=" + String.format("%.1f", speed) +
+                                " | Dir=" + controller.getOrientationString() +
+                                " | thr=" + String.format("%.2f", throttle) +
+                                " br=" + String.format("%.2f", brake) +
+                                " st=" + String.format("%.2f", steering)
                 );
+            }
+
+            if (stuckTimer > 5f) {
+                System.out.println("[FAIL] Stuck: throttle high but speed < 1 km/h for >5s at t="
+                        + String.format("%.2f", simTime) + " pos=" + controller.getPosition());
+                break;
             }
         }
 
-        System.out.println("---- Road Test Complete ----");
+        System.out.println("---- LONG Polyline Road Test Complete ----");
     }
 }

@@ -67,10 +67,6 @@ public class RoadSegment {
                 + ", speedLimit=" + speedLimit + " km/h}";
     }
 
-    /* ============================================================
-       INTERNAL POINT TYPE — NOT EXPOSED OUTSIDE RoadSegment
-       ============================================================ */
-
     public static final class Point {
         private final double latitude;
         private final double longitude;
