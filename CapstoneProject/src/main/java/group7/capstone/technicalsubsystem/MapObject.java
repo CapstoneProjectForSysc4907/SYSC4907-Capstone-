@@ -40,14 +40,14 @@ public class MapObject {
         physicsSpace.addCollisionObject(groundBody);
     }
 
-    private void clearRoadAndWallBodies() {
+   /* private void clearRoadAndWallBodies() {
         for (PhysicsRigidBody b : roadAndWallBodies) {
             physicsSpace.removeCollisionObject(b);
         }
         roadAndWallBodies.clear();
-    }
+    }*/
 
-    private boolean tryBuildRoadFromRoadData() {
+  /*  private boolean tryBuildRoadFromRoadData() {
         List<RoadSegment> geoPoints = roadData.getRoadList();
         if (geoPoints == null || geoPoints.size() < 2) return false;
 
@@ -73,10 +73,10 @@ public class MapObject {
 
         lastBuiltRoadVersion = v;
         rebuildRoadsFromHolder(); // your existing method
-    }
+    }*/
 
 
-
+/*
     private void buildRoadColliderAndWalls(PhysicsRoadSegment seg) {
 
         Vector3f start = seg.getStartPoint();
@@ -122,7 +122,7 @@ public class MapObject {
         if (!built) {
             // no-op: activeSegments is already empty, colliders already cleared
         }
-    }
+    }*/
 
     public PhysicsSpace getPhysicsSpace() { return physicsSpace; }
 

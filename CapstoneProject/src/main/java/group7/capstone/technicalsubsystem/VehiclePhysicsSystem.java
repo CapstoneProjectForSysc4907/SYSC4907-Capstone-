@@ -24,6 +24,11 @@ public class VehiclePhysicsSystem {
     private static final float MIN_SPEED_FOR_RESIST = 0.05f;
     private static final float MIN_SPEED_FOR_BRAKE  = 0.10f;
 
+    // Steering tuning: prevents “perfect orbit” while still coupling heading to velocity a bit
+    private static final float MIN_SPEED_FOR_STEER   = 0.10f;
+    private static final float MIN_TAN_STEER         = 1e-4f;
+    private static final float VELOCITY_BLEND        = 0.08f; // 0=no coupling, 1=hard snap (DON'T)
+
     public VehiclePhysicsSystem(PhysicsRigidBody body) {
         this.vehicleBody = body;
         this.config = VehicleConfig.getInstance();
@@ -88,7 +93,8 @@ public class VehiclePhysicsSystem {
         // ------------------ 2) RESISTIVE FORCES (oppose motion) ------------------
         // Drag and rolling resistance should oppose the direction of travel (velocity)
         if (speedMps > MIN_SPEED_FOR_RESIST) {
-            Vector3f velDir = vel.normalize(); // safe because speedMps > threshold
+            // IMPORTANT: don't normalize() the original 'vel' reference; clone first
+            Vector3f velDir = vel.clone().normalizeLocal();
 
             // Drag ~ v^2 (your coefficient)
             float dragMag = config.getDragCoefficient() * speedMps * speedMps;
@@ -107,7 +113,8 @@ public class VehiclePhysicsSystem {
         // ------------------ 3) BRAKING (oppose motion) ------------------
         // IMPORTANT: brake should push opposite current velocity, NOT "subtract from forward force"
         if (speedMps > MIN_SPEED_FOR_BRAKE && currentBrakeForce > 0f) {
-            Vector3f velDir = vel.normalize();
+            // IMPORTANT: don't normalize() the original 'vel' reference; clone first
+            Vector3f velDir = vel.clone().normalizeLocal();
             Vector3f brakeForceVec = velDir.negate().mult(currentBrakeForce);
             vehicleBody.applyCentralForce(brakeForceVec);
         }
@@ -116,7 +123,8 @@ public class VehiclePhysicsSystem {
         float speedKmh = speedMps * metresSecondToKilometresPerHour;
 
         if (speedKmh > config.getMaxSpeed()) {
-            Vector3f limitedVelocity = vel.normalize()
+            // IMPORTANT: don't normalize() the original 'vel' reference; clone first
+            Vector3f limitedVelocity = vel.clone().normalizeLocal()
                     .mult(config.getMaxSpeed() / metresSecondToKilometresPerHour);
             vehicleBody.setLinearVelocity(limitedVelocity);
         }
@@ -133,7 +141,6 @@ public class VehiclePhysicsSystem {
     public void debugSpeed (){
         vehicleBody.setLinearVelocity(Vector3f.ZERO);
         vehicleBody.setAngularVelocity(Vector3f.ZERO);
-
     }
 
     /// This is the steering wheel. That is to say that this just says how much you have 'turned the wheel'.
@@ -143,9 +150,15 @@ public class VehiclePhysicsSystem {
     }
 
     public List<Vector3f> debugGetForces(){
+        // IMPORTANT: don't normalizeLocal() the real physics vectors
         List<Vector3f> forceList = new ArrayList<>();
-        forceList.add(vehicleBody.getAngularVelocity().normalizeLocal());
-        forceList.add(vehicleBody.getLinearVelocity().normalizeLocal());
+
+        Vector3f av = vehicleBody.getAngularVelocity();
+        Vector3f lv = vehicleBody.getLinearVelocity();
+
+        forceList.add(av == null ? null : av.clone().normalizeLocal());
+        forceList.add(lv == null ? null : lv.clone().normalizeLocal());
+
         return forceList;
     }
 
@@ -155,15 +168,20 @@ public class VehiclePhysicsSystem {
         if (Math.abs(steeringAngleDeg) < 0.01f)
             return;
 
-        float speed = vehicleBody.getLinearVelocity().length();
-        if (speed < 0.1f)
+        Vector3f vel = vehicleBody.getLinearVelocity();
+        float speed = vel.length();
+        if (speed < MIN_SPEED_FOR_STEER)
             return;
 
         float steeringRad = (float) Math.toRadians(steeringAngleDeg);
         float L = config.getWheelbase();
 
-        float turnRadius = L / (float) Math.tan(steeringRad);
-        float angularVelocity = speed / turnRadius;
+        float tan = (float) Math.tan(steeringRad);
+        if (Math.abs(tan) < MIN_TAN_STEER)
+            return;
+
+        float turnRadius = L / tan;
+        float angularVelocity = speed / turnRadius; // rad/s
         float rotationAmount = angularVelocity * dt;
 
         Quaternion currentRot = vehicleBody.getPhysicsRotation().clone();
@@ -171,12 +189,21 @@ public class VehiclePhysicsSystem {
         Quaternion newRot = deltaRot.mult(currentRot);
         vehicleBody.setPhysicsRotation(newRot);
 
-        // Force velocity to follow the new forward direction
+        // DO NOT hard-snap velocity to forward direction (that creates perfect “orbit” behaviour).
+        // If you want coupling, blend gently.
         Vector3f forward = newRot.mult(Vector3f.UNIT_Z);
-        Vector3f currentVel = vehicleBody.getLinearVelocity();
-        float correctedSpeed = currentVel.length();
-        Vector3f correctedVel = forward.mult(correctedSpeed);
-        vehicleBody.setLinearVelocity(correctedVel);
+        forward.y = 0f;
+        if (forward.lengthSquared() > 1e-6f) forward.normalizeLocal();
+
+        Vector3f velXZ = new Vector3f(vel.x, 0f, vel.z);
+        float sp = velXZ.length();
+
+        if (sp > 1e-6f) {
+            Vector3f desiredVel = forward.mult(sp);
+            float blend = VELOCITY_BLEND; // try 0.05–0.15
+            Vector3f blended = velXZ.mult(1f - blend).add(desiredVel.mult(blend));
+            vehicleBody.setLinearVelocity(new Vector3f(blended.x, vel.y, blended.z));
+        }
     }
 
     public float calculateStoppingDistance(float speedKmh) {
