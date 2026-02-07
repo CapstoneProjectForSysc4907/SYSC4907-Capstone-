@@ -4,157 +4,230 @@ import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 
-/// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
-/// This class here has all the actual physics in it, a real logic layer. Do not call it, use CarObject.
+import java.util.List;
 
+/// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
+/// Pure physics + safety logic. NO path steering assistance.
 public class VehiclePhysicsSystem {
 
     private final PhysicsRigidBody vehicleBody;
-    private VehicleConfig config;
+    private final VehicleConfig config;
+
     private float steeringAngleDeg;
-    private final float metresSecondToKilometresPerHour = 3.6f;
+    private static final float MPS_TO_KMH = 3.6f;
+
+    private float offRoadAccumSeconds = 0f;
+    private float teleportCooldownSeconds = 0f;
+
+    private static final float OFFROAD_EXTRA_MARGIN = 3.0f;
+    private static final float OFFROAD_HOLD_TIME = 0.25f;
+    private static final float TELEPORT_COOLDOWN = 1.0f;
+
     private float currentEngineForce;
     private float currentBrakeForce;
 
+    private List<PhysicsRoadSegment> routeSegments;
+    private final SoftRailFollower rail = new SoftRailFollower();
+
+    private float lastCrossTrackMeters = 0f;
+    private float lastToleranceMeters = Float.POSITIVE_INFINITY;
+
     public VehiclePhysicsSystem(PhysicsRigidBody body) {
         this.vehicleBody = body;
-        config  = VehicleConfig.getInstance();
-        steeringAngleDeg = 0f;
-        currentEngineForce = 0f;
-        currentBrakeForce = 0f;
+        this.config = VehicleConfig.getInstance();
+        this.steeringAngleDeg = 0f;
+        this.currentEngineForce = 0f;
+        this.currentBrakeForce = 0f;
     }
+
+    // ---------------- ROUTE / SAFETY ----------------
+
+    public void setRouteSegments(List<PhysicsRoadSegment> segments) {
+        this.routeSegments = segments;
+    }
+
+    public boolean isOnRoad() {
+        if (routeSegments == null || routeSegments.isEmpty()) return true;
+        lastCrossTrackMeters = rail.getCrossTrackMeters(this, routeSegments);
+        lastToleranceMeters = rail.getToleranceMeters(routeSegments);
+        return lastCrossTrackMeters <= lastToleranceMeters;
+    }
+
+    public boolean shouldTeleportBack(float dt) {
+        if (routeSegments == null || routeSegments.isEmpty()) return false;
+
+        teleportCooldownSeconds = Math.max(0f, teleportCooldownSeconds - dt);
+
+        lastCrossTrackMeters = rail.getCrossTrackMeters(this, routeSegments);
+        lastToleranceMeters  = rail.getToleranceMeters(routeSegments);
+
+        float hardLimit = lastToleranceMeters + OFFROAD_EXTRA_MARGIN;
+
+        if (lastCrossTrackMeters > hardLimit) {
+            offRoadAccumSeconds += dt;
+        } else {
+            offRoadAccumSeconds = 0f;
+        }
+
+        if (teleportCooldownSeconds > 0f) return false;
+
+        if (offRoadAccumSeconds >= OFFROAD_HOLD_TIME) {
+            offRoadAccumSeconds = 0f;
+            teleportCooldownSeconds = TELEPORT_COOLDOWN;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void teleportToNearestRoad() {
+        if (routeSegments == null || routeSegments.isEmpty()) return;
+
+        SoftRailFollower.NearestPoint np =
+                rail.getNearestPointAndForward(this, routeSegments);
+        if (np == null) return;
+
+        vehicleBody.setLinearVelocity(Vector3f.ZERO);
+        vehicleBody.setAngularVelocity(Vector3f.ZERO);
+
+        final float insetMeters = 0.25f;
+        final float liftMeters = 0.05f;
+
+        Vector3f forward = np.forwardXZ.clone();
+        forward.y = 0f;
+        if (forward.lengthSquared() < 1e-6f) forward.set(0, 0, 1);
+        forward.normalizeLocal();
+
+        Vector3f right = new Vector3f(forward.z, 0, -forward.x).normalizeLocal();
+        float sign = Math.signum(rail.getSignedCrossTrackMeters(this, routeSegments));
+
+        Vector3f target = np.point.add(right.mult(-sign * insetMeters));
+        target.y = getPosition().y + liftMeters;
+
+        teleportTo(target, forward);
+        vehicleBody.setLinearVelocity(Vector3f.ZERO);
+        vehicleBody.setAngularVelocity(Vector3f.ZERO);
+    }
+
+    public void teleportTo(Vector3f pos, Vector3f forwardDirXZ) {
+        if (pos == null) return;
+
+        vehicleBody.setPhysicsLocation(pos);
+
+        Vector3f dir = forwardDirXZ.clone();
+        dir.y = 0f;
+        if (dir.lengthSquared() < 1e-6f) dir.set(0, 0, 1);
+        dir.normalizeLocal();
+
+        Quaternion rot = new Quaternion();
+        rot.lookAt(dir, Vector3f.UNIT_Y);
+        vehicleBody.setPhysicsRotation(rot);
+
+        vehicleBody.setLinearVelocity(Vector3f.ZERO);
+        vehicleBody.setAngularVelocity(Vector3f.ZERO);
+        vehicleBody.clearForces();
+    }
+
+    // ---------------- ENGINE / MOTION ----------------
 
     private void applyThrottle(float throttle, float dt) {
-        float targetForce = throttle * config.getMaxThrottleForce();
+        float target = throttle * config.getMaxThrottleForce();
+        float maxDelta = config.getMaxAccelRate() * dt;
 
-        float maxForceChange = config.getMaxAccelRate() * dt;   // NEW config field
-
-        if (currentEngineForce < targetForce) {
-            currentEngineForce = Math.min(currentEngineForce + maxForceChange, targetForce);
-        } else {
-            currentEngineForce = Math.max(currentEngineForce - maxForceChange, targetForce);
-        }
+        if (currentEngineForce < target)
+            currentEngineForce = Math.min(currentEngineForce + maxDelta, target);
+        else
+            currentEngineForce = Math.max(currentEngineForce - maxDelta, target);
     }
 
-    private void applyBrake(float brakeInput, float dt) {
-        float targetBrake = brakeInput * config.getMaxBrakeForce();
+    private void applyBrake(float brake, float dt) {
+        float target = brake * config.getMaxBrakeForce();
+        float maxDelta = config.getMaxBrakeRate() * dt;
 
-        float maxBrakeChange = config.getMaxBrakeRate() * dt; // NEW config field
-
-        if (currentBrakeForce < targetBrake) {
-            currentBrakeForce = Math.min(currentBrakeForce + maxBrakeChange, targetBrake);
-        } else {
-            currentBrakeForce = Math.max(currentBrakeForce - maxBrakeChange, targetBrake);
-        }
+        if (currentBrakeForce < target)
+            currentBrakeForce = Math.min(currentBrakeForce + maxDelta, target);
+        else
+            currentBrakeForce = Math.max(currentBrakeForce - maxDelta, target);
     }
-
 
     public void changeSpeed(float throttle, float brake, float dt) {
-        /* throttle and brake are the percent of force one is using of the max
-
-        /*
-
-         */
         applyThrottle(throttle, dt);
         applyBrake(brake, dt);
 
-        float currentSpeed = vehicleBody.getLinearVelocity().length(); //metres per second
-        float engineForce = currentEngineForce; //Newtons
-        float brakeForce  = currentBrakeForce; //Newtons
+        float speed = vehicleBody.getLinearVelocity().length();
 
-        float drag = config.getDragCoefficient() * currentSpeed * currentSpeed; //No unit
-        float rolling = config.getRollingResistance() * currentSpeed; //Newtons
-        //Rolling resistance has to do with the defomration of the tires and such
-        //Unlike friciton it is constant and does not scale with speed
+        float drag = config.getDragCoefficient() * speed * speed;
+        float rolling = config.getRollingResistance() * speed;
+        float netForce = currentEngineForce - drag - rolling;
 
-        float netForce = engineForce - drag - rolling;
-
-        //This if statement below only lets one brake if the car is moving
-        if (currentSpeed > 0.1f && brake > 0f) {
-            netForce -= brakeForce;
-        }
-
-        float acceleration = netForce / config.getMass();
-        float bulletForce = acceleration * config.getMass();
-        //It's just called bullet force to be sent to the bullet physics engine
+        if (speed > 0.1f && brake > 0f)
+            netForce -= currentBrakeForce;
 
         Vector3f forward = vehicleBody.getPhysicsRotation().mult(Vector3f.UNIT_Z);
-        /*
-        This above is imporant
-        Vector3f.UNIT_Z is the direction of the default car rotation. It defines forward
-        It gets  multiplied in 'mult' by the cars rotation to figure out where it's facing
-        This line makes it so that the brakes/accelration is always facing forward.
-         */
-        Vector3f appliedForce = forward.mult(bulletForce);
-        //This line above takes that rotated vector and expands it to include the force
-        vehicleBody.applyCentralForce(appliedForce);
+        vehicleBody.applyCentralForce(forward.mult(netForce));
 
-        float speed = currentSpeed * metresSecondToKilometresPerHour; // Output is m/s
-
-        //This whole block below is to stop one from going above the car's max speed
-        if (speed > config.getMaxSpeed()) {
-            Vector3f limitedVelocity = vehicleBody.getLinearVelocity()
-                    .normalize() //This takes out the speed componet if the vector has speed and direction
-                    .mult(config.getMaxSpeed() / metresSecondToKilometresPerHour);
-            vehicleBody.setLinearVelocity(limitedVelocity);
-            //Linear velocity is a way of saying current speed, with respect to the vector
+        if (speed * MPS_TO_KMH > config.getMaxSpeed()) {
+            Vector3f v = vehicleBody.getLinearVelocity().normalize()
+                    .mult(config.getMaxSpeed() / MPS_TO_KMH);
+            vehicleBody.setLinearVelocity(v);
         }
-
     }
+
+    // ---------------- STEERING (PLAYER ONLY) ----------------
+
+    public void steer(float steeringInput) {
+        steeringAngleDeg = steeringInput * config.getMaxSteeringAngleDeg();
+    }
+
+    public void updateSteering(float dt) {
+        if (Math.abs(steeringAngleDeg) < 0.01f) return;
+
+        float speed = vehicleBody.getLinearVelocity().length();
+        if (speed < 0.1f) return;
+
+        float steeringRad = (float) Math.toRadians(steeringAngleDeg);
+        float L = config.getWheelbase();
+
+        float tan = (float) Math.tan(steeringRad);
+        if (Math.abs(tan) < 1e-6f) return;
+
+        float turnRadius = L / tan;
+        float angularVelocity = speed / turnRadius;
+
+        Quaternion delta =
+                new Quaternion().fromAngleAxis(angularVelocity * dt, Vector3f.UNIT_Y);
+
+        Quaternion rot = delta.mult(vehicleBody.getPhysicsRotation());
+        vehicleBody.setPhysicsRotation(rot);
+
+        Vector3f forward = rot.mult(Vector3f.UNIT_Z);
+        vehicleBody.setLinearVelocity(forward.mult(speed));
+    }
+
+    // ---------------- ACCESSORS ----------------
 
     public Vector3f getPosition() {
         return vehicleBody.getPhysicsLocation();
     }
 
+    public float getSpeedKmh() {
+        return vehicleBody.getLinearVelocity().length() * MPS_TO_KMH;
+    }
+
     public float getSpeed() {
-        return vehicleBody.getLinearVelocity().length() * metresSecondToKilometresPerHour; // Output is metres per second
-    }
-
-    /// This is the steering wheel. That is to say that this just says how much you have 'turned the wheel'.
-    /// It does not steer the car that is updateSteering's job
-    public void steer(float steeringInput) {
-        steeringAngleDeg = steeringInput * config.getMaxSteeringAngleDeg();
-    }
-    /// This function, below, actually steers the car
-    public void updateSteering(float dt) {
-        //Above, float dt reprsents the time since the last physics update. Dt being delta time
-
-        //This if statement, below, says if no steering, do not update
-        if (Math.abs(steeringAngleDeg) < 0.01f)
-            return;
-
-        float speed = vehicleBody.getLinearVelocity().length();
-        //Below, says, if not moving do not update
-        if (speed < 0.1f)
-            return;
-
-        float steeringRad = (float)Math.toRadians(steeringAngleDeg);
-        float L = config.getWheelbase(); //This is the distance between the front and rear axles
-
-        float turnRadius = L / (float)Math.tan(steeringRad);
-
-        float angularVelocity = speed / turnRadius;
-
-        float rotationAmount = angularVelocity * dt;
-
-        //This below actually changes the rotation
-        Quaternion currentRot = vehicleBody.getPhysicsRotation().clone();
-        Quaternion deltaRot = new com.jme3.math.Quaternion().fromAngleAxis(rotationAmount, Vector3f.UNIT_Y);
-        Quaternion newRot = deltaRot.mult(currentRot);
-        vehicleBody.setPhysicsRotation(newRot);
-
-        // Force velocity to follow the new forward direction
-        Vector3f forward = newRot.mult(Vector3f.UNIT_Z);
-        Vector3f currentVel = vehicleBody.getLinearVelocity();
-        float correctedSpeed = currentVel.length();
-        Vector3f correctedVel = forward.mult(correctedSpeed);
-        vehicleBody.setLinearVelocity(correctedVel);
+        return getSpeedKmh();
     }
 
     public float calculateStoppingDistance(float speedKmh) {
         float speed = speedKmh / 3.6f;
         float decel = config.getMaxBrakeForce() / config.getMass();
-        return (speed * speed) / (2 * decel);
+        return decel <= 1e-6f ? Float.POSITIVE_INFINITY
+                : (speed * speed) / (2 * decel);
     }
 
+    public Vector3f getForwardDirectionXZ() {
+        Vector3f f = vehicleBody.getPhysicsRotation().mult(Vector3f.UNIT_Z);
+        f.y = 0f;
+        return f.lengthSquared() < 1e-6f ? new Vector3f(0,0,1) : f.normalize();
+    }
 }

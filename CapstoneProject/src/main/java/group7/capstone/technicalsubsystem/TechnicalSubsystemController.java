@@ -1,49 +1,53 @@
 package group7.capstone.technicalsubsystem;
 
+import com.jme3.math.Vector3f;
+import group7.capstone.APIController.APIResponseDomain;
 
-import java.util.ArrayList;
-
-/// This is the contoller you should actually call to do everything. The other classes are technical, this one
-/// is simple.
-/// Contact Brock Fielder if you wanna change many technical details in the other classes
+import java.util.Collections;
+import java.util.List;
 
 public class TechnicalSubsystemController {
 
     private final MapObject world;
     private final CarObject car;
-    private final RoadDataHolder roadData = RoadDataHolder.getInstance();
+    private final RoadPipelineController roadPipeline;
+
+    private List<PhysicsRoadSegment> activeRouteSegments = Collections.emptyList();
 
     public TechnicalSubsystemController() {
         this.world = new MapObject();
         this.car = new CarObject("Car_01", world);
+        this.roadPipeline = new RoadPipelineController(2, 3.7f);
     }
-
-    public ArrayList<RoadSegment> getRoadData() {
-        return roadData.getRoadList();
-    }
-
-    public void addRoadData(RoadSegment road) {
-        roadData.addRoadData(road);
-    }
-
-    public void rebuildRoads() {
-        world.rebuildRoadsFromHolder();
-    }
-
 
     public void update(float throttle, float brake, float steering, float dt) {
         car.update(throttle, brake, steering, dt);
         world.step(dt);
     }
 
-    public float getSpeedKmh() {return car.getSpeed();}
+    public void setRouteFromApi(APIResponseDomain response) {
+        roadPipeline.runFromApiResponse(response);
+        activeRouteSegments = roadPipeline.getPhysicsSegments();
+        car.setRouteSegments(activeRouteSegments);
+    }
 
-    public String getPositionString() {return car.getPosition().toString();}
+    public void setRouteFromGeoPoints(List<RoadSegment> geoPoints) {
+        roadPipeline.runFromGeoPoints(geoPoints);
+        activeRouteSegments = roadPipeline.getPhysicsSegments();
+        car.setRouteSegments(activeRouteSegments);
+    }
 
+    public List<PhysicsRoadSegment> getActiveRouteSegments() { return activeRouteSegments; }
 
-    public String getOrientationString() {return car.getCompassDirection(); }
+    public float getSpeedKmh() { return car.getSpeed(); }
+    public String getPositionString() { return car.getPosition().toString(); }
+    public String getOrientationString() { return car.getCompassDirection(); }
+    public Vector3f getPosition() { return car.getPosition(); }
 
-    public com.jme3.math.Vector3f getPosition() { return car.getPosition();}
+    public float getStopDistance() { return car.getStopDistance(); }
 
-    public float getStopDistance(){return car.getStopDistance();}
+    public boolean isOnRoad() { return car.isOnRoad(); }
+
+    public int getGeoPointCount() { return roadPipeline.getGeoPoints().size(); }
+    public int getPhysicsSegmentCount() { return roadPipeline.getPhysicsSegments().size(); }
 }

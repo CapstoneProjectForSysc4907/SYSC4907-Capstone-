@@ -2,10 +2,6 @@ package group7.capstone;
 
 import com.jme3.system.NativeLibraryLoader;
 import group7.capstone.APIController.APIResponseDomain;
-import group7.capstone.APIController.APIStub;
-import group7.capstone.APIController.GoogleMapsAPIController;
-import group7.capstone.APIController.StreetViewImage;
-import group7.capstone.technicalsubsystem.RoadSegment;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 
 import java.io.IOException;
@@ -16,31 +12,14 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        // --- Optional: API demo (wrap so it doesn't kill the physics smoke test) ---
-        try {
-            GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
-            StreetViewImage img = APIStub.getClosestImage("45.53923474756772", "-76.71215350154397");
-            // img.saveImageToFile("png", "test.png");
-        } catch (Exception e) {
-            System.out.println("[WARN] Skipping StreetView stub demo: " + e.getMessage());
-        }
-
-        // Bullet native
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
-        // --- Create subsystem controller ---
         TechnicalSubsystemController controller = new TechnicalSubsystemController();
 
-        // --- Inject fake "Snap-to-Roads" data ---
         APIResponseDomain fake = fakeSnapResponse_OttawaStraightThenTurn();
-        injectFakeRoadFromSnapResponse(controller, fake);
+        controller.setRouteFromApi(fake);
 
-        // --- IMPORTANT: rebuild roads so MapObject uses the injected points ---
-        // (rename if your method is rebuildWorldRoads(), rebuildRoadsFromHolder(), etc.)
-        controller.rebuildRoads();
-
-        // --- Run your drive test ---
-        testDrive(controller);
+        testDriveRail(controller);
     }
 
     private static APIResponseDomain fakeSnapResponse_OttawaStraightThenTurn() {
@@ -50,15 +29,13 @@ public class Main {
         double baseLat = 45.4215;
         double baseLon = -75.6972;
 
-        // Segment A: north
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < 30; i++) {
             points.add(makeSnappedPoint(baseLat + i * 0.00005, baseLon, i));
         }
 
-        // Segment B: east
-        double turnLat = baseLat + 24 * 0.00005;
-        for (int i = 1; i <= 25; i++) {
-            points.add(makeSnappedPoint(turnLat, baseLon + i * 0.00005, 25 + i));
+        double turnLat = baseLat + 29 * 0.00005;
+        for (int i = 1; i <= 30; i++) {
+            points.add(makeSnappedPoint(turnLat, baseLon + i * 0.00005, 30 + i));
         }
 
         api.setSnappedPoints(points);
@@ -78,44 +55,28 @@ public class Main {
         return sp;
     }
 
-    private static void injectFakeRoadFromSnapResponse(TechnicalSubsystemController controller, APIResponseDomain api) {
-        if (api == null || api.getSnappedPoints() == null || api.getSnappedPoints().size() < 2) {
-            System.out.println("No snapped points to inject; using hardcoded road fallback inside MapObject.");
-            return;
-        }
-
-        int count = 0;
-        for (APIResponseDomain.SnappedPoint sp : api.getSnappedPoints()) {
-            if (sp == null || sp.getLocation() == null) continue;
-
-            double lat = sp.getLocation().getLatitude();
-            double lon = sp.getLocation().getLongitude();
-
-            controller.addRoadData(new RoadSegment(lat, lon));
-            count++;
-        }
-
-        System.out.println("Injected snapped points into RoadDataHolder: " + count);
-    }
-
-    public static void testDrive(TechnicalSubsystemController controller) {
+    public static void testDriveRail(TechnicalSubsystemController controller) {
 
         float simTime = 0f;
         float dt = 1f / 60f;
 
-        System.out.println("---- Starting TechnicalSubsystemController Road Test ----");
+        System.out.println("---- Starting Rail Follow Test ----");
 
-        while (simTime < 20f) {
+        while (simTime < 22f) {
 
             float throttle = 0f;
             float brake    = 0f;
             float steering = 0f;
 
-            if (simTime < 5f) {
+            if (simTime < 7f) {
                 throttle = 1.0f;
-            } else if (simTime < 14f) {
+                steering = 0.0f;
+            } else if (simTime < 12f) {
                 throttle = 1.0f;
-                steering = 0.25f; // was 1.0f; smaller steering makes the test less chaotic
+                steering = 1.0f;
+            } else if (simTime < 17f) {
+                throttle = 1.0f;
+                steering = 0.0f;
             } else {
                 brake = 1.0f;
             }
@@ -123,16 +84,43 @@ public class Main {
             controller.update(throttle, brake, steering, dt);
             simTime += dt;
 
+            // Print ~every 0.5s (same cadence you already had)
             if (((int)(simTime * 10)) % 5 == 0) {
+
+                // These 3 are the "rail prints" you wanted:
+               // float cross = safe(controller::getCurrentCrossTrackMeters, 0f);
+               // float tol   = safe(controller::getCurrentToleranceMeters, Float.POSITIVE_INFINITY);
+               // int segIdx  = safeInt(controller::getCurrentSegIndex, -1);
+
                 System.out.println(
                         "t=" + String.format("%.2f", simTime) +
                                 "s | Pos=" + controller.getPosition() +
                                 " | Speed=" + String.format("%.1f", controller.getSpeedKmh()) +
-                                " | Dir=" + controller.getOrientationString()
+                                " | Dir=" + controller.getOrientationString() +
+                                " | OnRoad=" + controller.isOnRoad() +
+                                " | Segments=" + controller.getPhysicsSegmentCount() //+
+                        //.// " | SegIdx=" + segIdx +
+                                //" | Cross=" + String.format("%.3f", cross) +
+                                //"m | Tol=" + String.format("%.3f", tol) + "m"
                 );
             }
         }
 
-        System.out.println("---- Road Test Complete ----");
+        System.out.println("---- Rail Follow Test Complete ----");
+    }
+
+    // -----------------------
+    // Tiny helpers so Main compiles even if you temporarily don't have the getters wired.
+    // (If you DO have the getters, these helpers still work fine.)
+    // -----------------------
+    private interface FloatGetter { float get(); }
+    private interface IntGetter { int get(); }
+
+    private static float safe(FloatGetter g, float fallback) {
+        try { return g.get(); } catch (Throwable t) { return fallback; }
+    }
+
+    private static int safeInt(IntGetter g, int fallback) {
+        try { return g.get(); } catch (Throwable t) { return fallback; }
     }
 }
