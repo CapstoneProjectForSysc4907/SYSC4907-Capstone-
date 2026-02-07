@@ -3,6 +3,8 @@ import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.objects.PhysicsRigidBody;
 import com.jme3.math.Vector3f;
 
+import java.util.List;
+
 /// DO NOT CALL THIS CLASS FROM OUTSIDE THE SUBSYSTEM
 /// Carobject is the representation of the car itself. It is a high level representation that interacts with the physics
 /// This class is an integration layer between the VehiclePhysicsSystem and the Vechicle Config
@@ -37,11 +39,20 @@ public class CarObject {
         this.physics = new VehiclePhysicsSystem(body);
     }
 
+    public void setRouteSegments(List<PhysicsRoadSegment> segments) {
+        physics.setRouteSegments(segments);
+    }
+
     public void update(float throttle, float brake, float steering, float dt) {
         physics.steer(steering);
         physics.changeSpeed(throttle, brake, dt);
         physics.updateSteering(dt);
+        if (physics.shouldTeleportBack(dt)) {
+            physics.teleportToNearestRoad();
+        }
+
     }
+
     public Vector3f getPosition() {
         return physics.getPosition();
     }
@@ -77,4 +88,10 @@ public class CarObject {
     }
 
     public float getStopDistance(){return physics.calculateStoppingDistance(getSpeed());}
+
+    public boolean isOnRoad() {
+        return physics.isOnRoad();
+    }
+
+
 }
