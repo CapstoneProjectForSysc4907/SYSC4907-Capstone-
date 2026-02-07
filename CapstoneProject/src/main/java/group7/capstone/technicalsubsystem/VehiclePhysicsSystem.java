@@ -13,13 +13,12 @@ public class VehiclePhysicsSystem {
     private final PhysicsRigidBody vehicleBody;
     private final VehicleConfig config;
 
-    private float steeringAngleDeg;
     private static final float MPS_TO_KMH = 3.6f;
 
+    // --- off-road safety timers ---
     private float offRoadAccumSeconds = 0f;
     private float teleportCooldownSeconds = 0f;
 
-    private static final float OFFROAD_EXTRA_MARGIN = 3.0f;
     private static final float OFFROAD_HOLD_TIME = 0.25f;
     private static final float TELEPORT_COOLDOWN = 1.0f;
 
@@ -29,13 +28,9 @@ public class VehiclePhysicsSystem {
     private List<PhysicsRoadSegment> routeSegments;
     private final SoftRailFollower rail = new SoftRailFollower();
 
-    private float lastCrossTrackMeters = 0f;
-    private float lastToleranceMeters = Float.POSITIVE_INFINITY;
-
     public VehiclePhysicsSystem(PhysicsRigidBody body) {
         this.vehicleBody = body;
         this.config = VehicleConfig.getInstance();
-        this.steeringAngleDeg = 0f;
         this.currentEngineForce = 0f;
         this.currentBrakeForce = 0f;
     }
@@ -46,28 +41,24 @@ public class VehiclePhysicsSystem {
         this.routeSegments = segments;
     }
 
+    /** True if the car is inside ANY road corridor */
     public boolean isOnRoad() {
         if (routeSegments == null || routeSegments.isEmpty()) return true;
-        lastCrossTrackMeters = rail.getCrossTrackMeters(this, routeSegments);
-        lastToleranceMeters = rail.getToleranceMeters(routeSegments);
-        return lastCrossTrackMeters <= lastToleranceMeters;
+
+        SoftRailFollower.Result r = rail.check(this, routeSegments);
+        return !r.offRoad;
     }
 
+    /** Time-based decision: have we been off-road long enough to teleport? */
     public boolean shouldTeleportBack(float dt) {
         if (routeSegments == null || routeSegments.isEmpty()) return false;
 
         teleportCooldownSeconds = Math.max(0f, teleportCooldownSeconds - dt);
 
-        lastCrossTrackMeters = rail.getCrossTrackMeters(this, routeSegments);
-        lastToleranceMeters  = rail.getToleranceMeters(routeSegments);
+        SoftRailFollower.Result r = rail.check(this, routeSegments);
 
-        float hardLimit = lastToleranceMeters + OFFROAD_EXTRA_MARGIN;
-
-        if (lastCrossTrackMeters > hardLimit) {
-            offRoadAccumSeconds += dt;
-        } else {
-            offRoadAccumSeconds = 0f;
-        }
+        if (r.offRoad) offRoadAccumSeconds += dt;
+        else offRoadAccumSeconds = 0f;
 
         if (teleportCooldownSeconds > 0f) return false;
 
@@ -80,41 +71,29 @@ public class VehiclePhysicsSystem {
         return false;
     }
 
+    /** Hard snap back to nearest valid road corridor */
     public void teleportToNearestRoad() {
         if (routeSegments == null || routeSegments.isEmpty()) return;
 
-        SoftRailFollower.NearestPoint np =
-                rail.getNearestPointAndForward(this, routeSegments);
-        if (np == null) return;
+        SoftRailFollower.Result r = rail.check(this, routeSegments);
+        if (!r.offRoad || r.snapPoint == null) return;
 
         vehicleBody.setLinearVelocity(Vector3f.ZERO);
         vehicleBody.setAngularVelocity(Vector3f.ZERO);
 
-        final float insetMeters = 0.25f;
-        final float liftMeters = 0.05f;
+        Vector3f target = r.snapPoint.clone();
+        target.y = getPosition().y + 0.05f; // small lift to avoid ground clipping
 
-        Vector3f forward = np.forwardXZ.clone();
-        forward.y = 0f;
-        if (forward.lengthSquared() < 1e-6f) forward.set(0, 0, 1);
-        forward.normalizeLocal();
-
-        Vector3f right = new Vector3f(forward.z, 0, -forward.x).normalizeLocal();
-        float sign = Math.signum(rail.getSignedCrossTrackMeters(this, routeSegments));
-
-        Vector3f target = np.point.add(right.mult(-sign * insetMeters));
-        target.y = getPosition().y + liftMeters;
-
-        teleportTo(target, forward);
-        vehicleBody.setLinearVelocity(Vector3f.ZERO);
-        vehicleBody.setAngularVelocity(Vector3f.ZERO);
+        teleportTo(target, r.forwardXZ);
     }
 
-    public void teleportTo(Vector3f pos, Vector3f forwardDirXZ) {
+    private void teleportTo(Vector3f pos, Vector3f forwardDirXZ) {
         if (pos == null) return;
 
         vehicleBody.setPhysicsLocation(pos);
 
-        Vector3f dir = forwardDirXZ.clone();
+        Vector3f dir = (forwardDirXZ != null) ? forwardDirXZ.clone() : new Vector3f(0, 0, 1);
+
         dir.y = 0f;
         if (dir.lengthSquared() < 1e-6f) dir.set(0, 0, 1);
         dir.normalizeLocal();
@@ -175,16 +154,42 @@ public class VehiclePhysicsSystem {
 
     // ---------------- STEERING (PLAYER ONLY) ----------------
 
+    private float steeringInput = 0f;    // raw [-1..1]
+    private float steeringAngleDeg = 0f; // applied (smoothed)
+
+    private static final float STEER_EPS_DEG = 0.01f;
+
+    // How fast the steering angle can change (deg/sec)
+    private static final float STEER_RATE_DEG_PER_SEC = 120f; // try 90–180
+
+    // Speed-based steering limits
+    private static final float STEER_FULL_KMH = 10f; // <= this, allow max steering
+    private static final float STEER_MIN_KMH  = 80f; // >= this, clamp to min steering
+    private static final float STEER_MIN_DEG  = 3.0f; // high-speed cap
+
     public void steer(float steeringInput) {
-        steeringAngleDeg = steeringInput * config.getMaxSteeringAngleDeg();
+        // store input only; actual angle is computed in updateSteering(dt)
+        this.steeringInput = clamp(steeringInput, -1f, 1f);
     }
 
     public void updateSteering(float dt) {
-        if (Math.abs(steeringAngleDeg) < 0.01f) return;
+        float speedMps = vehicleBody.getLinearVelocity().length();
+        if (speedMps < 0.1f) return;
 
-        float speed = vehicleBody.getLinearVelocity().length();
-        if (speed < 0.1f) return;
+        float speedKmh = speedMps * MPS_TO_KMH;
 
+        // 1) speed-limited max steering
+        float maxAllowedDeg = speedLimitedMaxSteerDeg(speedKmh);
+
+        // 2) target from input
+        float targetDeg = steeringInput * maxAllowedDeg;
+
+        // 3) rate-limit changes (prevents snap-spin)
+        steeringAngleDeg = moveToward(steeringAngleDeg, targetDeg, STEER_RATE_DEG_PER_SEC * dt);
+
+        if (Math.abs(steeringAngleDeg) < STEER_EPS_DEG) return;
+
+        // 4) apply bicycle-yaw approximation
         float steeringRad = (float) Math.toRadians(steeringAngleDeg);
         float L = config.getWheelbase();
 
@@ -192,16 +197,40 @@ public class VehiclePhysicsSystem {
         if (Math.abs(tan) < 1e-6f) return;
 
         float turnRadius = L / tan;
-        float angularVelocity = speed / turnRadius;
+        float angularVelocity = speedMps / turnRadius;
 
-        Quaternion delta =
-                new Quaternion().fromAngleAxis(angularVelocity * dt, Vector3f.UNIT_Y);
+        Quaternion delta = new Quaternion().fromAngleAxis(angularVelocity * dt, Vector3f.UNIT_Y);
 
         Quaternion rot = delta.mult(vehicleBody.getPhysicsRotation());
         vehicleBody.setPhysicsRotation(rot);
 
+        // keep speed magnitude, just rotate velocity with the body
         Vector3f forward = rot.mult(Vector3f.UNIT_Z);
-        vehicleBody.setLinearVelocity(forward.mult(speed));
+        vehicleBody.setLinearVelocity(forward.mult(speedMps));
+    }
+
+    private float speedLimitedMaxSteerDeg(float speedKmh) {
+        float maxDeg = config.getMaxSteeringAngleDeg();
+        float minDeg = Math.min(STEER_MIN_DEG, maxDeg);
+
+        // 0..1 between full and min speed
+        float t = (speedKmh - STEER_FULL_KMH) / (STEER_MIN_KMH - STEER_FULL_KMH);
+        t = clamp(t, 0f, 1f);
+
+        // ease-out: reduces steering more aggressively as speed rises
+        t = t * t;
+
+        return maxDeg + (minDeg - maxDeg) * t;
+    }
+
+    private static float moveToward(float current, float target, float maxDelta) {
+        float delta = target - current;
+        if (Math.abs(delta) <= maxDelta) return target;
+        return current + Math.signum(delta) * maxDelta;
+    }
+
+    private static float clamp(float v, float lo, float hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 
     // ---------------- ACCESSORS ----------------
@@ -214,6 +243,12 @@ public class VehiclePhysicsSystem {
         return vehicleBody.getLinearVelocity().length() * MPS_TO_KMH;
     }
 
+    public Vector3f getForwardDirectionXZ() {
+        Vector3f f = vehicleBody.getPhysicsRotation().mult(Vector3f.UNIT_Z);
+        f.y = 0f;
+        return f.lengthSquared() < 1e-6f ? new Vector3f(0, 0, 1) : f.normalize();
+    }
+
     public float getSpeed() {
         return getSpeedKmh();
     }
@@ -221,13 +256,6 @@ public class VehiclePhysicsSystem {
     public float calculateStoppingDistance(float speedKmh) {
         float speed = speedKmh / 3.6f;
         float decel = config.getMaxBrakeForce() / config.getMass();
-        return decel <= 1e-6f ? Float.POSITIVE_INFINITY
-                : (speed * speed) / (2 * decel);
-    }
-
-    public Vector3f getForwardDirectionXZ() {
-        Vector3f f = vehicleBody.getPhysicsRotation().mult(Vector3f.UNIT_Z);
-        f.y = 0f;
-        return f.lengthSquared() < 1e-6f ? new Vector3f(0,0,1) : f.normalize();
+        return decel <= 1e-6f ? Float.POSITIVE_INFINITY : (speed * speed) / (2 * decel);
     }
 }
