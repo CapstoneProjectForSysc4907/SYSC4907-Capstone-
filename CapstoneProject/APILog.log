@@ -2,38 +2,38 @@
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2026-02-03T22:31:32.942013100Z</date>
-  <millis>1770157892942</millis>
-  <nanos>13100</nanos>
+  <date>2026-02-06T14:24:04.095091300Z</date>
+  <millis>1770387844095</millis>
+  <nanos>91300</nanos>
   <sequence>0</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
-  <method>saveStreet</method>
+  <method>getStreet</method>
   <thread>1</thread>
-  <message>finding closest road to: lat=45.53923474756772, lon=-76.71215350154397</message>
+  <message>finding closest road to: lat=45.4138714, lon=-75.40374039999999</message>
 </record>
 <record>
-  <date>2026-02-03T22:31:33.628670900Z</date>
-  <millis>1770157893628</millis>
-  <nanos>670900</nanos>
+  <date>2026-02-06T14:24:04.819386700Z</date>
+  <millis>1770387844819</millis>
+  <nanos>386700</nanos>
   <sequence>1</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
-  <method>saveStreet</method>
+  <method>getStreet</method>
   <thread>1</thread>
   <message>result returned properly</message>
 </record>
 <record>
-  <date>2026-02-03T22:31:33.676479200Z</date>
-  <millis>1770157893676</millis>
-  <nanos>479200</nanos>
+  <date>2026-02-06T14:24:04.874552800Z</date>
+  <millis>1770387844874</millis>
+  <nanos>552800</nanos>
   <sequence>2</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
-  <method>saveStreet</method>
+  <method>getStreet</method>
   <thread>1</thread>
   <message>exiting saveStreet function</message>
 </record>

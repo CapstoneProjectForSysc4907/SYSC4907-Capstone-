@@ -64,7 +64,7 @@ public class GoogleMapsAPIController {
     }
 
     public double[] calculateNewCoords(double lat, double lon, int head){
-        double dist = 0.0005;
+        double dist = 0.00025;
         double rHead = head*Math.PI/180;
         double newlat = lat + Math.cos(rHead) * dist;
         double newlon = lon + Math.sin(rHead) * dist;
@@ -83,7 +83,7 @@ public class GoogleMapsAPIController {
     public APIResponseDomain getStreet(double lat, double lon, int head) {
         logger.info("finding closest road to: lat=" + lat + ", lon=" + lon);
         //String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=45.424061778387276,-75.40926382929229|45.42590246784146,-75.4102358132577&key=" + APIConfig.getAPIKey();
-        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 40) + "&key=" + APIConfig.getAPIKey();
+        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 95) + "&key=" + APIConfig.getAPIKey();
         System.out.println(url);
         Request request = new Request.Builder()
                 .url(url)
