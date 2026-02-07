@@ -100,9 +100,9 @@ public class ImageLoader {
         try {
             // Fetch the street view image from API
             StreetViewImage apiImage = apiController.GetStreetViewImage(
-                    String.valueOf(lat),
-                    String.valueOf(lng),
-                    String.valueOf(heading)
+                    lat,
+                    lng,
+                    heading
             );
 
             if (apiImage == null) {

@@ -19,6 +19,7 @@ public class Main {
         // --- Optional: API demo (wrap so it doesn't kill the physics smoke test) ---
         try {
             GoogleMapsAPIController controller1 = new GoogleMapsAPIController();
+            //keep off to avoid excessive api calls
             //APIResponseDomain responseDomain = controller1.getStreet(45.4138714, -75.40374039999999,338);
             //System.out.println(responseDomain.getSnappedPoints().size());
             StreetViewImage img = APIStub.getClosestImage("45.53923474756772", "-76.71215350154397");

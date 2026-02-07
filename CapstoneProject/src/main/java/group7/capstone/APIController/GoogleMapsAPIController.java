@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import group7.capstone.caching.RoadSegment;
-import group7.capstone.caching.StreetViewImage;
 import okhttp3.*;
 
 import javax.imageio.ImageIO;
@@ -55,8 +54,11 @@ public class GoogleMapsAPIController {
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;
             logger.info("result returned is probably image");
-            return new StreetViewImage(response.body().bytes(), head, lat,
-                    lon);
+
+            //ready to switch out to match image loader
+            //return new StreetViewImage(response.body().bytes(), head, lat, lon);
+            return new StreetViewImage(ImageIO.read(response.body().byteStream()), lat, lon, head);
+
         } catch (IOException e) {
             logger.warning("google api call failed");
             throw new RuntimeException(e);
@@ -108,7 +110,6 @@ public class GoogleMapsAPIController {
                 s.getLocation().setLongitude((Double) location.get("longitude"));
                 s.setPlaceId((String) p.get("placeId"));
                 if(p.containsKey("originalIndex")){
-                    System.out.println("has origin");
                     double index = (double) p.get("originalIndex");
                     s.setOriginalIndex((int) index);
                 }
@@ -118,8 +119,7 @@ public class GoogleMapsAPIController {
             logger.warning("google api call failed");
             throw new RuntimeException(e);
         }
-        logger.info("exiting saveStreet function");
-        System.out.println(responseDomain.getSnappedPoints().size());
+        logger.info("exiting getStreet function");
         return responseDomain;
     }
 
