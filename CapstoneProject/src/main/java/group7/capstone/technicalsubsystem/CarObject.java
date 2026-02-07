@@ -53,6 +53,9 @@ public class CarObject {
 
     }
 
+    public PhysicsRoadSegment getCurrentSegment(){return physics.getCurrentSegment();
+    }
+
     public Vector3f getPosition() {
         return physics.getPosition();
     }

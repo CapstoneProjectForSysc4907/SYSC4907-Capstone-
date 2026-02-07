@@ -3,6 +3,7 @@ package group7.capstone.technicalsubsystem;
 import com.jme3.math.Vector3f;
 import group7.capstone.APIController.APIResponseDomain;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class TechnicalSubsystemController {
     }
 
     public void setRouteFromApi(APIResponseDomain response) {
+        //This is where you should send any API reponses don't touch anything else
         roadPipeline.runFromApiResponse(response);
         activeRouteSegments = roadPipeline.getPhysicsSegments();
         car.setRouteSegments(activeRouteSegments);
@@ -35,6 +37,14 @@ public class TechnicalSubsystemController {
         roadPipeline.runFromGeoPoints(geoPoints);
         activeRouteSegments = roadPipeline.getPhysicsSegments();
         car.setRouteSegments(activeRouteSegments);
+    }
+
+    public List<Double> getCurrentLongAndLat(){
+        //If you want to set an image, only touch this, no need to dig through the rest of the code here
+        List<Double> output = new ArrayList<>();
+        output.add(car.getCurrentSegment().getOriginalSegment().getLatitude());
+        output.add(car.getCurrentSegment().getOriginalSegment().getLongitude());
+        return output;
     }
 
     public List<PhysicsRoadSegment> getActiveRouteSegments() { return activeRouteSegments; }

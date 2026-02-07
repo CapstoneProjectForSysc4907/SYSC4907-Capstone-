@@ -3,9 +3,7 @@ package group7.capstone.technicalsubsystem;
 import com.jme3.math.Vector3f;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class RoadSegmentConverter {
 
@@ -28,8 +26,6 @@ public class RoadSegmentConverter {
         List<PhysicsRoadSegment> out = new ArrayList<>();
         if (geoPoints == null || geoPoints.size() < 2) return out;
 
-        Set<PhysicsRoadSegment> seen = new HashSet<>();
-
         for (int i = 0; i < geoPoints.size() - 1; i++) {
             RoadSegment a = geoPoints.get(i);
             RoadSegment b = geoPoints.get(i + 1);
@@ -39,13 +35,11 @@ public class RoadSegmentConverter {
 
             if (start.distance(end) < 0.05f) continue;
 
+            // MIN CHANGE: pass the source segment (using "a" as the origin)
             PhysicsRoadSegment seg =
-                    new PhysicsRoadSegment(start, end, defaultLaneCount, defaultLaneWidthMeters);
+                    new PhysicsRoadSegment(start, end, defaultLaneCount, defaultLaneWidthMeters, a);
 
-            // NEW: skip duplicates (including AB vs BA)
-            if (seen.add(seg)) {
-                out.add(seg);
-            }
+            out.add(seg);
         }
         return out;
     }

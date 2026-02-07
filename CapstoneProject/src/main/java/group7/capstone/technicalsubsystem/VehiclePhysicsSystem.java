@@ -258,4 +258,6 @@ public class VehiclePhysicsSystem {
         float decel = config.getMaxBrakeForce() / config.getMass();
         return decel <= 1e-6f ? Float.POSITIVE_INFINITY : (speed * speed) / (2 * decel);
     }
+
+    public PhysicsRoadSegment getCurrentSegment() {return rail.getCurrentSegment();}
 }

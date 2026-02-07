@@ -16,6 +16,14 @@ import java.util.List;
  */
 public class SoftRailFollower {
 
+    // MIN ADD: remember the segment we are currently inside (or null if off-road)
+    private PhysicsRoadSegment currentSegment = null;
+
+    // MIN ADD: getter for later use
+    public PhysicsRoadSegment getCurrentRoadSegment() {
+        return currentSegment;
+    }
+
     public static class Result {
         public final boolean offRoad;
         public final Vector3f snapPoint;     // where to teleport (XZ snapped, Y preserved)
@@ -38,6 +46,7 @@ public class SoftRailFollower {
                         List<PhysicsRoadSegment> segments) {
 
         if (physics == null || segments == null || segments.isEmpty()) {
+            currentSegment = null; // MIN ADD
             return new Result(false, null, null, 0f);
         }
 
@@ -46,7 +55,6 @@ public class SoftRailFollower {
         float bestDist2 = Float.POSITIVE_INFINITY;
         Vector3f bestPoint = null;
         Vector3f bestForward = null;
-        float bestTolerance = 0f;
 
         for (PhysicsRoadSegment seg : segments) {
 
@@ -64,13 +72,13 @@ public class SoftRailFollower {
 
             // If inside this segment's corridor → ON ROAD, done
             if (dist <= halfWidth) {
+                currentSegment = seg; // MIN ADD
                 return new Result(false, null, null, dist);
             }
 
             // Otherwise track nearest segment for teleport
             if (cp.dist2 < bestDist2) {
                 bestDist2 = cp.dist2;
-                bestTolerance = halfWidth;
 
                 bestPoint = new Vector3f(cp.point.x, pos.y, cp.point.z);
 
@@ -84,6 +92,7 @@ public class SoftRailFollower {
         }
 
         // Not inside ANY segment corridor → off-road
+        currentSegment = null; // MIN ADD
         return new Result(
                 true,
                 bestPoint,
@@ -91,6 +100,9 @@ public class SoftRailFollower {
                 (float) Math.sqrt(bestDist2)
         );
     }
+
+    public PhysicsRoadSegment getCurrentSegment() {return currentSegment;}
+
 
     // ------------------------------------------------------------------
 
