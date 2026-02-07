@@ -1,4 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
+<record>
+  <date>2026-02-07T14:51:47.322951300Z</date>
+  <millis>1770475907322</millis>
+  <nanos>951300</nanos>
+  <sequence>0</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>finding closest road to: lat=45.4138714, lon=-75.40374039999999</message>
+</record>
+<record>
+  <date>2026-02-07T14:51:48.081944400Z</date>
+  <millis>1770475908081</millis>
+  <nanos>944400</nanos>
+  <sequence>1</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>result returned properly</message>
+</record>
+<record>
+  <date>2026-02-07T14:51:48.134331600Z</date>
+  <millis>1770475908134</millis>
+  <nanos>331600</nanos>
+  <sequence>2</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>exiting getStreet function</message>
+</record>
 </log>
