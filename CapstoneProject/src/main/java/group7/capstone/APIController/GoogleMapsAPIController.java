@@ -83,6 +83,7 @@ public class GoogleMapsAPIController {
     }
 
     public APIResponseDomain getStreet(double lat, double lon, int head) {
+        //Head is the cardnial direction
         logger.info("finding closest road to: lat=" + lat + ", lon=" + lon);
         //String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=45.424061778387276,-75.40926382929229|45.42590246784146,-75.4102358132577&key=" + APIConfig.getAPIKey();
         String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 95) + "&key=" + APIConfig.getAPIKey();

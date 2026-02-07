@@ -13,13 +13,12 @@ public class VehiclePhysicsSystem {
     private final PhysicsRigidBody vehicleBody;
     private final VehicleConfig config;
 
-    private float steeringAngleDeg;
     private static final float MPS_TO_KMH = 3.6f;
 
+    // --- off-road safety timers ---
     private float offRoadAccumSeconds = 0f;
     private float teleportCooldownSeconds = 0f;
 
-    private static final float OFFROAD_EXTRA_MARGIN = 3.0f;
     private static final float OFFROAD_HOLD_TIME = 0.25f;
     private static final float TELEPORT_COOLDOWN = 1.0f;
 
@@ -29,13 +28,12 @@ public class VehiclePhysicsSystem {
     private List<PhysicsRoadSegment> routeSegments;
     private final SoftRailFollower rail = new SoftRailFollower();
 
-    private float lastCrossTrackMeters = 0f;
-    private float lastToleranceMeters = Float.POSITIVE_INFINITY;
+    // Cached once-per-frame rail result
+    private SoftRailFollower.Result lastRailResult = null;
 
     public VehiclePhysicsSystem(PhysicsRigidBody body) {
         this.vehicleBody = body;
         this.config = VehicleConfig.getInstance();
-        this.steeringAngleDeg = 0f;
         this.currentEngineForce = 0f;
         this.currentBrakeForce = 0f;
     }
@@ -44,13 +42,24 @@ public class VehiclePhysicsSystem {
 
     public void setRouteSegments(List<PhysicsRoadSegment> segments) {
         this.routeSegments = segments;
+        offRoadAccumSeconds = 0f;
+        teleportCooldownSeconds = 0f;
+        lastRailResult = null;
+    }
+
+    /** Call ONCE per frame (before isOnRoad / remaining road / teleport decisions). */
+    public void updateRailState(float dt) {
+        if (routeSegments == null || routeSegments.isEmpty()) {
+            lastRailResult = new SoftRailFollower.Result(false, null, null, 0f, -1, 0f);
+            return;
+        }
+        lastRailResult = rail.check(this, routeSegments);
     }
 
     public boolean isOnRoad() {
         if (routeSegments == null || routeSegments.isEmpty()) return true;
-        lastCrossTrackMeters = rail.getCrossTrackMeters(this, routeSegments);
-        lastToleranceMeters = rail.getToleranceMeters(routeSegments);
-        return lastCrossTrackMeters <= lastToleranceMeters;
+        if (lastRailResult == null) return true;
+        return !lastRailResult.offRoad;
     }
 
     public boolean shouldTeleportBack(float dt) {
@@ -58,16 +67,10 @@ public class VehiclePhysicsSystem {
 
         teleportCooldownSeconds = Math.max(0f, teleportCooldownSeconds - dt);
 
-        lastCrossTrackMeters = rail.getCrossTrackMeters(this, routeSegments);
-        lastToleranceMeters  = rail.getToleranceMeters(routeSegments);
+        if (lastRailResult == null) return false;
 
-        float hardLimit = lastToleranceMeters + OFFROAD_EXTRA_MARGIN;
-
-        if (lastCrossTrackMeters > hardLimit) {
-            offRoadAccumSeconds += dt;
-        } else {
-            offRoadAccumSeconds = 0f;
-        }
+        if (lastRailResult.offRoad) offRoadAccumSeconds += dt;
+        else offRoadAccumSeconds = 0f;
 
         if (teleportCooldownSeconds > 0f) return false;
 
@@ -76,45 +79,28 @@ public class VehiclePhysicsSystem {
             teleportCooldownSeconds = TELEPORT_COOLDOWN;
             return true;
         }
-
         return false;
     }
 
     public void teleportToNearestRoad() {
         if (routeSegments == null || routeSegments.isEmpty()) return;
-
-        SoftRailFollower.NearestPoint np =
-                rail.getNearestPointAndForward(this, routeSegments);
-        if (np == null) return;
+        if (lastRailResult == null || !lastRailResult.offRoad || lastRailResult.snapPoint == null) return;
 
         vehicleBody.setLinearVelocity(Vector3f.ZERO);
         vehicleBody.setAngularVelocity(Vector3f.ZERO);
 
-        final float insetMeters = 0.25f;
-        final float liftMeters = 0.05f;
+        Vector3f target = lastRailResult.snapPoint.clone();
+        target.y = getPosition().y + 0.05f;
 
-        Vector3f forward = np.forwardXZ.clone();
-        forward.y = 0f;
-        if (forward.lengthSquared() < 1e-6f) forward.set(0, 0, 1);
-        forward.normalizeLocal();
-
-        Vector3f right = new Vector3f(forward.z, 0, -forward.x).normalizeLocal();
-        float sign = Math.signum(rail.getSignedCrossTrackMeters(this, routeSegments));
-
-        Vector3f target = np.point.add(right.mult(-sign * insetMeters));
-        target.y = getPosition().y + liftMeters;
-
-        teleportTo(target, forward);
-        vehicleBody.setLinearVelocity(Vector3f.ZERO);
-        vehicleBody.setAngularVelocity(Vector3f.ZERO);
+        teleportTo(target, lastRailResult.forwardXZ);
     }
 
-    public void teleportTo(Vector3f pos, Vector3f forwardDirXZ) {
+    private void teleportTo(Vector3f pos, Vector3f forwardDirXZ) {
         if (pos == null) return;
 
         vehicleBody.setPhysicsLocation(pos);
 
-        Vector3f dir = forwardDirXZ.clone();
+        Vector3f dir = (forwardDirXZ != null) ? forwardDirXZ.clone() : new Vector3f(0, 0, 1);
         dir.y = 0f;
         if (dir.lengthSquared() < 1e-6f) dir.set(0, 0, 1);
         dir.normalizeLocal();
@@ -126,6 +112,29 @@ public class VehiclePhysicsSystem {
         vehicleBody.setLinearVelocity(Vector3f.ZERO);
         vehicleBody.setAngularVelocity(Vector3f.ZERO);
         vehicleBody.clearForces();
+    }
+
+    /** Remaining road distance ahead in metres. */
+    public float getRemainingRoadMeters() {
+        if (routeSegments == null || routeSegments.isEmpty()) return Float.POSITIVE_INFINITY;
+        if (lastRailResult == null) return Float.POSITIVE_INFINITY;
+
+        int idx = lastRailResult.segmentIndex;
+        float t = lastRailResult.tOnSegment;
+
+        if (idx < 0 || idx >= routeSegments.size()) return 0f;
+
+        PhysicsRoadSegment cur = routeSegments.get(idx);
+
+        float remaining = (1f - t) * cur.getLength();
+        for (int i = idx + 1; i < routeSegments.size(); i++) {
+            remaining += routeSegments.get(i).getLength();
+        }
+        return remaining;
+    }
+
+    public PhysicsRoadSegment getCurrentSegment() {
+        return rail.getCurrentSegment();
     }
 
     // ---------------- ENGINE / MOTION ----------------
@@ -175,15 +184,32 @@ public class VehiclePhysicsSystem {
 
     // ---------------- STEERING (PLAYER ONLY) ----------------
 
+    private float steeringInput = 0f;    // raw [-1..1]
+    private float steeringAngleDeg = 0f; // applied (smoothed)
+
+    private static final float STEER_EPS_DEG = 0.01f;
+    private static final float STEER_RATE_DEG_PER_SEC = 120f;
+
+    private static final float STEER_FULL_KMH = 10f;
+    private static final float STEER_MIN_KMH  = 80f;
+    private static final float STEER_MIN_DEG  = 3.0f;
+
     public void steer(float steeringInput) {
-        steeringAngleDeg = steeringInput * config.getMaxSteeringAngleDeg();
+        this.steeringInput = clamp(steeringInput, -1f, 1f);
     }
 
     public void updateSteering(float dt) {
-        if (Math.abs(steeringAngleDeg) < 0.01f) return;
+        float speedMps = vehicleBody.getLinearVelocity().length();
+        if (speedMps < 0.1f) return;
 
-        float speed = vehicleBody.getLinearVelocity().length();
-        if (speed < 0.1f) return;
+        float speedKmh = speedMps * MPS_TO_KMH;
+
+        float maxAllowedDeg = speedLimitedMaxSteerDeg(speedKmh);
+        float targetDeg = steeringInput * maxAllowedDeg;
+
+        steeringAngleDeg = moveToward(steeringAngleDeg, targetDeg, STEER_RATE_DEG_PER_SEC * dt);
+
+        if (Math.abs(steeringAngleDeg) < STEER_EPS_DEG) return;
 
         float steeringRad = (float) Math.toRadians(steeringAngleDeg);
         float L = config.getWheelbase();
@@ -192,16 +218,36 @@ public class VehiclePhysicsSystem {
         if (Math.abs(tan) < 1e-6f) return;
 
         float turnRadius = L / tan;
-        float angularVelocity = speed / turnRadius;
+        float angularVelocity = speedMps / turnRadius;
 
-        Quaternion delta =
-                new Quaternion().fromAngleAxis(angularVelocity * dt, Vector3f.UNIT_Y);
+        Quaternion delta = new Quaternion().fromAngleAxis(angularVelocity * dt, Vector3f.UNIT_Y);
 
         Quaternion rot = delta.mult(vehicleBody.getPhysicsRotation());
         vehicleBody.setPhysicsRotation(rot);
 
         Vector3f forward = rot.mult(Vector3f.UNIT_Z);
-        vehicleBody.setLinearVelocity(forward.mult(speed));
+        vehicleBody.setLinearVelocity(forward.mult(speedMps));
+    }
+
+    private float speedLimitedMaxSteerDeg(float speedKmh) {
+        float maxDeg = config.getMaxSteeringAngleDeg();
+        float minDeg = Math.min(STEER_MIN_DEG, maxDeg);
+
+        float t = (speedKmh - STEER_FULL_KMH) / (STEER_MIN_KMH - STEER_FULL_KMH);
+        t = clamp(t, 0f, 1f);
+        t = t * t;
+
+        return maxDeg + (minDeg - maxDeg) * t;
+    }
+
+    private static float moveToward(float current, float target, float maxDelta) {
+        float delta = target - current;
+        if (Math.abs(delta) <= maxDelta) return target;
+        return current + Math.signum(delta) * maxDelta;
+    }
+
+    private static float clamp(float v, float lo, float hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 
     // ---------------- ACCESSORS ----------------
@@ -218,16 +264,15 @@ public class VehiclePhysicsSystem {
         return getSpeedKmh();
     }
 
-    public float calculateStoppingDistance(float speedKmh) {
-        float speed = speedKmh / 3.6f;
-        float decel = config.getMaxBrakeForce() / config.getMass();
-        return decel <= 1e-6f ? Float.POSITIVE_INFINITY
-                : (speed * speed) / (2 * decel);
-    }
-
     public Vector3f getForwardDirectionXZ() {
         Vector3f f = vehicleBody.getPhysicsRotation().mult(Vector3f.UNIT_Z);
         f.y = 0f;
-        return f.lengthSquared() < 1e-6f ? new Vector3f(0,0,1) : f.normalize();
+        return f.lengthSquared() < 1e-6f ? new Vector3f(0, 0, 1) : f.normalize();
+    }
+
+    public float calculateStoppingDistance(float speedKmh) {
+        float speed = speedKmh / 3.6f;
+        float decel = config.getMaxBrakeForce() / config.getMass();
+        return decel <= 1e-6f ? Float.POSITIVE_INFINITY : (speed * speed) / (2 * decel);
     }
 }
