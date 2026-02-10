@@ -9,19 +9,17 @@ import java.util.logging.Level;
 
 /**
  * Cache Manager for Map Data
- * 
- * TODO : When Action 3 is complete use your real GoogleMapsAPIController instead of a stub
  */
 public class CacheManager {
     private static final Logger LOGGER = Logger.getLogger(CacheManager.class.getName());
-    
+
     private final Map<String, CachedMapData> cache;
     private final GoogleMapsAPIController apiController;
     
-    //congifuration
+    //configuration
     private int maxCacheSize;
     private double preloadDistanceKm;
-    private long maxCacheAgeMs;
+    private final long maxCacheAgeMs;
     
     //for logs
     private long cacheHits;
@@ -202,9 +200,7 @@ public class CacheManager {
     /**
      * Preload map data along a route
      * Caches data for waypoints and intermediate points within preloadDistanceKm ahead
-     * 
-     * TODO: This method is complete but depends on the API controller so action 3 must be done first
-     * 
+     *
      * @param waypoints List of waypoints along the route
      */
     public void preloadAlongPath(List<Waypoint> waypoints) {
@@ -213,7 +209,7 @@ public class CacheManager {
             return;
         }
 
-        LOGGER.info(String.format("Preloading data for %d waypoints (distance: %.1fkm)",
+        LOGGER.fine(String.format("Preloading data for %d waypoints (distance: %.1fkm)",
                 waypoints.size(), preloadDistanceKm));
 
         for (Waypoint waypoint : waypoints) {
@@ -225,11 +221,62 @@ public class CacheManager {
             );
         }
 
-        LOGGER.info("Preloading complete");
+        LOGGER.fine("Preloading complete");
     }
-    
 
-    
+    /**
+     * Preload road data ahead of a moving vehicle
+     * It generates waypoints based on current position, heading, and speed, then
+     * preloads road data at those locations.
+     *
+     * @param currentLat Current latitude
+     * @param currentLon Current longitude
+     * @param headingDegrees Direction in degrees (0=North, 90=East, 180=South, 270=West)
+     * @param speedKmh Current speed in km/h
+     */
+    public void preloadForVehicle(double currentLat, double currentLon, int headingDegrees, float speedKmh) {
+        // Only preload if moving at reasonable speed
+        if (speedKmh < 10f) {
+            return;
+        }
+
+        // Generate waypoints ahead based on vehicle heading
+        List<Waypoint> waypoints = generateWaypointsAhead(currentLat, currentLon, headingDegrees);
+
+        // Preload asynchronously
+        preloadAlongPath(waypoints);
+    }
+
+    /**
+     * Generate waypoints ahead of current position based on heading
+     * Creates waypoints at 500m, 1km, 1.5km, and 2km ahead
+     *
+     * @param startLat Starting latitude
+     * @param startLon Starting longitude
+     * @param headingDeg Heading in degrees from north
+     * @return List of waypoints ahead
+     */
+    private List<Waypoint> generateWaypointsAhead(double startLat, double startLon, int headingDeg) {
+        List<Waypoint> waypoints = new ArrayList<>();
+
+        // Add current position
+        waypoints.add(new Waypoint(startLat, startLon));
+
+        // Calculate positions ahead (every 500m for next 2km)
+        double headingRad = Math.toRadians(headingDeg);
+        int numWaypoints = 4; // 0.5, 1.0, 1.5, 2.0 km
+        double distancePerWaypoint = 0.0005; // ~500m in degrees (approximate)
+
+        for (int i = 1; i <= numWaypoints; i++) {
+            double distance = distancePerWaypoint * i;
+            double newLat = startLat + Math.cos(headingRad) * distance;
+            double newLon = startLon + Math.sin(headingRad) * distance;
+            waypoints.add(new Waypoint(newLat, newLon));
+        }
+
+        return waypoints;
+    }
+
     /**
      * clear all cached data
      */
