@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CacheManagerTest {
     
-    private CacheManager cacheManager;
+    private LegacyCacheManagerDemo cacheManager;
     private MockGoogleMapsAPIController mockApiController;
     
     @BeforeEach
@@ -26,7 +26,7 @@ class CacheManagerTest {
         testConfig.setProperty("preload.distance.km", "2.0");
         testConfig.setProperty("max.cache.age.ms", "60000"); // 1 minute for testing
         
-        cacheManager = new CacheManager(mockApiController, testConfig);
+        cacheManager = new LegacyCacheManagerDemo(mockApiController, testConfig);
     }
     
     @AfterEach

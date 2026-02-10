@@ -8,12 +8,10 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * Cache Manager for Map Data
- * 
- * TODO : When Action 3 is complete use your real GoogleMapsAPIController instead of a stub
+ * Cache Manager for Map Data, this is replaced bt RoadAPICacheManager
  */
-public class CacheManager {
-    private static final Logger LOGGER = Logger.getLogger(CacheManager.class.getName());
+public class LegacyCacheManagerDemo {
+    private static final Logger LOGGER = Logger.getLogger(LegacyCacheManagerDemo.class.getName());
     
     private final Map<String, CachedMapData> cache;
     private final GoogleMapsAPIController apiController;
@@ -31,7 +29,7 @@ public class CacheManager {
     /**
      * @param apiController The API controller to fetch data from
      */
-    public CacheManager(GoogleMapsAPIController apiController) {
+    public LegacyCacheManagerDemo(GoogleMapsAPIController apiController) {
         this(apiController, loadDefaultConfig());
     }
     
@@ -40,7 +38,7 @@ public class CacheManager {
      * @param apiController The API controller to fetch data from
      * @param config Configuration properties
      */
-    public CacheManager(GoogleMapsAPIController apiController, Properties config) {
+    public LegacyCacheManagerDemo(GoogleMapsAPIController apiController, Properties config) {
         this.apiController = apiController;
         this.cache = new ConcurrentHashMap<>();
         this.cacheHits = 0;
