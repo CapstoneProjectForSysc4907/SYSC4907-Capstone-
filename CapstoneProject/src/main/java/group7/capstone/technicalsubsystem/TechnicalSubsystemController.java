@@ -130,32 +130,36 @@ public class TechnicalSubsystemController {
     }
 
     private void requestMoreRoadNow() {
-        // Mark as in-flight BEFORE calling
         roadRequestInFlight = true;
 
-        PhysicsRoadSegment seg = car.getCurrentSegment();
-        if (seg == null || seg.getOriginalSegment() == null) {
-            // Can't compute a sensible lat/lon
-            roadRequestInFlight = false;
+        try {
+            PhysicsRoadSegment seg = car.getCurrentSegment();
+            if (seg == null || seg.getOriginalSegment() == null) {
+                roadRequestCooldown = REQUEST_COOLDOWN_S;
+                return;
+            }
+
+            double lat = seg.getOriginalSegment().getLatitude();
+            double lon = seg.getOriginalSegment().getLongitude();
+            int headDeg = car.getHeadingDegrees();
+
+            // Try cache first
+            CachedMapData cachedData = cacheManager.getCachedData(lat, lon, PRELOAD_DISTANCE_KM);
+
+            if (cachedData != null && !cachedData.getRoadSegments().isEmpty()) {
+                // Cache hit: use cached data
+                APIResponseDomain response = convertCachedToApiResponse(cachedData);
+                extendRouteFromApi(response);
+            } else {
+                // Cache miss: call API
+                APIResponseDomain more = googleApi.getStreet(lat, lon, headDeg);
+                extendRouteFromApi(more);
+            }
+
+        } catch (Exception e) {
             roadRequestCooldown = REQUEST_COOLDOWN_S;
-            return;
-        }
-
-        double lat = seg.getOriginalSegment().getLatitude();
-        double lon = seg.getOriginalSegment().getLongitude();
-        int headDeg = car.getHeadingDegrees();
-
-        // Try cache first
-        CachedMapData cachedData = cacheManager.getCachedData(lat, lon, PRELOAD_DISTANCE_KM);
-
-        if (cachedData != null && !cachedData.getRoadSegments().isEmpty()) {
-            // Cache hit: use cached data
-            APIResponseDomain response = convertCachedToApiResponse(cachedData);
-            extendRouteFromApi(response);
-        } else {
-            // Cache miss: call API
-            APIResponseDomain more = googleApi.getStreet(lat, lon, headDeg);
-            extendRouteFromApi(more);
+        } finally {
+            roadRequestInFlight = false;
         }
     }
 
