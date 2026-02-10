@@ -3,11 +3,8 @@ package group7.capstone.technicalsubsystem;
 import com.jme3.math.Vector3f;
 import group7.capstone.APIController.APIResponseDomain;
 import group7.capstone.APIController.GoogleMapsAPIController;
-import group7.capstone.caching.CacheManager;
-import group7.capstone.caching.CachedMapData;
-import group7.capstone.caching.GoogleMapsAPIAdapter;
+import group7.capstone.caching.RoadApiCacheManager;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,9 +17,8 @@ public class TechnicalSubsystemController {
     // Injected external API controller (cannot modify it)
     private final GoogleMapsAPIController googleApi;
 
-    // Cache (hidden behind the scenes)
-    private final CacheManager cacheManager;
-    private static final double PRELOAD_DISTANCE_KM = 2.0;
+    // Optional cache wrapper for getStreet()
+    private final RoadApiCacheManager roadCache;
 
     private List<PhysicsRoadSegment> activeRouteSegments = Collections.emptyList();
 
@@ -34,16 +30,17 @@ public class TechnicalSubsystemController {
     private static final float NEED_MORE_THRESHOLD_M = 60f; // when remaining < this, request more
     private static final float REQUEST_COOLDOWN_S = 1.5f;   // avoid spamming
 
-    public TechnicalSubsystemController(GoogleMapsAPIController googleApi) {
-        this.googleApi = googleApi;
 
-        // Initialize cache behind the scenes
-        GoogleMapsAPIAdapter adapter = new GoogleMapsAPIAdapter(googleApi);
-        this.cacheManager = new CacheManager(adapter);
+    public TechnicalSubsystemController(GoogleMapsAPIController googleApi, RoadApiCacheManager roadCache) {
+        this.googleApi = googleApi;
+        this.roadCache = roadCache;
 
         this.world = new MapObject();
         this.car = new CarObject("Car_01", world);
         this.roadPipeline = new RoadPipelineController(2, 3.7f);
+    }
+    public TechnicalSubsystemController(GoogleMapsAPIController googleApi) {
+        this(googleApi, null);
     }
 
     /**
@@ -57,19 +54,6 @@ public class TechnicalSubsystemController {
 
         // 2) cooldown bookkeeping
         roadRequestCooldown = Math.max(0f, roadRequestCooldown - dt);
-
-        // Preload ahead (handled by cache)
-        if (car.isOnRoad()) {
-            PhysicsRoadSegment seg = car.getCurrentSegment();
-            if (seg != null && seg.getOriginalSegment() != null) {
-                cacheManager.preloadForVehicle(
-                        seg.getOriginalSegment().getLatitude(),
-                        seg.getOriginalSegment().getLongitude(),
-                        car.getHeadingDegrees(),
-                        car.getSpeed()
-                );
-            }
-        }
 
         // 3) decide if we need more road
         if (shouldRequestMoreRoadInternal()) {
@@ -93,9 +77,6 @@ public class TechnicalSubsystemController {
 
         roadRequestInFlight = false;
         roadRequestCooldown = 0f;
-
-        // Cache this data
-        cacheRouteData(response);
     }
 
     public void extendRouteFromApi(APIResponseDomain response) {
@@ -106,9 +87,6 @@ public class TechnicalSubsystemController {
         // success -> cooldown
         roadRequestInFlight = false;
         roadRequestCooldown = REQUEST_COOLDOWN_S;
-
-        // Cache this data
-        cacheRouteData(response);
     }
 
     // --- “need more road” logic ---
@@ -132,72 +110,25 @@ public class TechnicalSubsystemController {
     private void requestMoreRoadNow() {
         roadRequestInFlight = true;
 
-        try {
-            PhysicsRoadSegment seg = car.getCurrentSegment();
-            if (seg == null || seg.getOriginalSegment() == null) {
-                roadRequestCooldown = REQUEST_COOLDOWN_S;
-                return;
-            }
-
-            double lat = seg.getOriginalSegment().getLatitude();
-            double lon = seg.getOriginalSegment().getLongitude();
-            int headDeg = car.getHeadingDegrees();
-
-            // Try cache first
-            CachedMapData cachedData = cacheManager.getCachedData(lat, lon, PRELOAD_DISTANCE_KM);
-
-            if (cachedData != null && !cachedData.getRoadSegments().isEmpty()) {
-                // Cache hit: use cached data
-                APIResponseDomain response = convertCachedToApiResponse(cachedData);
-                extendRouteFromApi(response);
-            } else {
-                // Cache miss: call API
-                APIResponseDomain more = googleApi.getStreet(lat, lon, headDeg);
-                extendRouteFromApi(more);
-            }
-
-        } catch (Exception e) {
-            roadRequestCooldown = REQUEST_COOLDOWN_S;
-        } finally {
+        PhysicsRoadSegment seg = car.getCurrentSegment();
+        if (seg == null || seg.getOriginalSegment() == null) {
+            // Can't compute a sensible lat/lon
             roadRequestInFlight = false;
-        }
-    }
-
-    // --- Cache helper methods ---
-
-    private void cacheRouteData(APIResponseDomain response) {
-        if (response == null || response.getSnappedPoints() == null) return;
-
-        for (APIResponseDomain.SnappedPoint point : response.getSnappedPoints()) {
-            if (point.getLocation() != null) {
-                double lat = point.getLocation().getLatitude();
-                double lon = point.getLocation().getLongitude();
-                cacheManager.cacheRoadData(lat, lon, PRELOAD_DISTANCE_KM);
-            }
-        }
-    }
-
-    private APIResponseDomain convertCachedToApiResponse(CachedMapData cachedData) {
-        APIResponseDomain response = new APIResponseDomain();
-        List<APIResponseDomain.SnappedPoint> snappedPoints = new ArrayList<>();
-
-        if (!cachedData.getRoadSegments().isEmpty()) {
-            group7.capstone.caching.RoadSegment roadSeg = cachedData.getRoadSegments().get(0);
-
-            for (group7.capstone.caching.RoadSegment.Point point : roadSeg.getPoints()) {
-                APIResponseDomain.SnappedPoint snapped = new APIResponseDomain.SnappedPoint();
-                APIResponseDomain.LatLng latLng = new APIResponseDomain.LatLng();
-
-                latLng.setLatitude(point.getLatitude());
-                latLng.setLongitude(point.getLongitude());
-                snapped.setLocation(latLng);
-
-                snappedPoints.add(snapped);
-            }
+            roadRequestCooldown = REQUEST_COOLDOWN_S;
+            return;
         }
 
-        response.setSnappedPoints(snappedPoints);
-        return response;
+        double lat = seg.getOriginalSegment().getLatitude();
+        double lon = seg.getOriginalSegment().getLongitude();
+        int headDeg = car.getHeadingDegrees();
+
+        // Call external API
+        APIResponseDomain more = (roadCache != null)
+                ? roadCache.getStreet(lat, lon, headDeg)
+                : googleApi.getStreet(lat, lon, headDeg);
+
+        // Append into our road pipeline
+        extendRouteFromApi(more);
     }
 
     // --- existing getters / helpers ---

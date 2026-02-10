@@ -4,6 +4,7 @@ import com.jme3.system.NativeLibraryLoader;
 import group7.capstone.APIController.APIResponseDomain;
 import group7.capstone.APIController.GoogleMapsAPIController;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
+import group7.capstone.caching.RoadApiCacheManager;
 
 public class Main {
 
@@ -13,14 +14,16 @@ public class Main {
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
         GoogleMapsAPIController googleApi = new GoogleMapsAPIController();
-        TechnicalSubsystemController controller = new TechnicalSubsystemController(googleApi);
+        RoadApiCacheManager roadCache = new RoadApiCacheManager(googleApi);
+        TechnicalSubsystemController controller = new TechnicalSubsystemController(googleApi, roadCache);
 
         double startLat = 45.4240;
         double startLon = -75.6950;
         int startHeadDeg = 0; // degrees from north
 
         System.out.println("Requesting initial road...");
-        APIResponseDomain initialRoad = googleApi.getStreet(startLat, startLon, startHeadDeg);
+        APIResponseDomain initialRoad = roadCache.getStreet(startLat, startLon, startHeadDeg);
+        System.out.println(roadCache.getStats());
         controller.setRouteFromApi(initialRoad);
 
         System.out.println("Initial road loaded: geoPts=" + controller.getGeoPointCount()
