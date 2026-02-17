@@ -8,20 +8,18 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * Cache Manager for Map Data
- * 
- * TODO : When Action 3 is complete use your real GoogleMapsAPIController instead of a stub
+ * Cache Manager for Map Data, this is replaced bt RoadAPICacheManager
  */
-public class CacheManager {
-    private static final Logger LOGGER = Logger.getLogger(CacheManager.class.getName());
+public class LegacyCacheManagerDemo {
+    private static final Logger LOGGER = Logger.getLogger(LegacyCacheManagerDemo.class.getName());
     
     private final Map<String, CachedMapData> cache;
     private final GoogleMapsAPIController apiController;
     
-    //congifuration
+    //configuration
     private int maxCacheSize;
     private double preloadDistanceKm;
-    private long maxCacheAgeMs;
+    private final long maxCacheAgeMs;
     
     //for logs
     private long cacheHits;
@@ -31,7 +29,7 @@ public class CacheManager {
     /**
      * @param apiController The API controller to fetch data from
      */
-    public CacheManager(GoogleMapsAPIController apiController) {
+    public LegacyCacheManagerDemo(GoogleMapsAPIController apiController) {
         this(apiController, loadDefaultConfig());
     }
     
@@ -40,7 +38,7 @@ public class CacheManager {
      * @param apiController The API controller to fetch data from
      * @param config Configuration properties
      */
-    public CacheManager(GoogleMapsAPIController apiController, Properties config) {
+    public LegacyCacheManagerDemo(GoogleMapsAPIController apiController, Properties config) {
         this.apiController = apiController;
         this.cache = new ConcurrentHashMap<>();
         this.cacheHits = 0;
@@ -202,9 +200,7 @@ public class CacheManager {
     /**
      * Preload map data along a route
      * Caches data for waypoints and intermediate points within preloadDistanceKm ahead
-     * 
-     * TODO: This method is complete but depends on the API controller so action 3 must be done first
-     * 
+     *
      * @param waypoints List of waypoints along the route
      */
     public void preloadAlongPath(List<Waypoint> waypoints) {
@@ -213,7 +209,7 @@ public class CacheManager {
             return;
         }
 
-        LOGGER.info(String.format("Preloading data for %d waypoints (distance: %.1fkm)",
+        LOGGER.fine(String.format("Preloading data for %d waypoints (distance: %.1fkm)",
                 waypoints.size(), preloadDistanceKm));
 
         for (Waypoint waypoint : waypoints) {
@@ -225,11 +221,8 @@ public class CacheManager {
             );
         }
 
-        LOGGER.info("Preloading complete");
+        LOGGER.fine("Preloading complete");
     }
-    
-
-    
     /**
      * clear all cached data
      */

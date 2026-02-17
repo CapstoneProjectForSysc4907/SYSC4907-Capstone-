@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manages loading, caching, and validation of Street View images
@@ -29,7 +30,8 @@ public class ImageLoader {
     private long cacheMisses;
     private long successfulLoads;
     private long failedLoads;
-    private int currentlyLoading;
+    private final AtomicInteger currentlyLoading = new AtomicInteger(0);
+
     private final ExecutorService executorService;
 
     /**
@@ -45,7 +47,6 @@ public class ImageLoader {
         this.cacheMisses = 0;
         this.successfulLoads = 0;
         this.failedLoads = 0;
-        this.currentlyLoading = 0;
         this.executorService = Executors.newFixedThreadPool(4);
 
         createPlaceholderImage();
@@ -149,13 +150,15 @@ public class ImageLoader {
      */
     public CompletableFuture<BufferedImage> loadImageAsync(double lat, double lng, int heading,
                                                            Consumer<BufferedImage> callback) {
-        currentlyLoading++;
+        currentlyLoading.incrementAndGet();
 
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return loadStreetViewImage(lat, lng, heading);
+            } catch (Exception e) {
+                return getPlaceholderImage();
             } finally {
-                currentlyLoading--;
+                currentlyLoading.decrementAndGet();
             }
         }, executorService).thenApply(image -> {
             if (callback != null) {
@@ -301,7 +304,7 @@ public class ImageLoader {
      * @return Number of ongoing asynchronous image loading
      */
     public int getLoadingCount() {
-        return currentlyLoading;
+        return currentlyLoading.get();
     }
 
     /**
@@ -339,7 +342,7 @@ public class ImageLoader {
                 getCacheHitRate() * 100,
                 successfulLoads,
                 failedLoads,
-                currentlyLoading
+                currentlyLoading.get()
         );
     }
 

@@ -18,7 +18,7 @@ public class CacheManagerDemo {
         //Create mock API controller (simulates what Action 3 will provide)
         MockAPIController mockApi = new MockAPIController();
         
-        CacheManager cacheManager = new CacheManager(mockApi);
+        LegacyCacheManagerDemo cacheManager = new LegacyCacheManagerDemo(mockApi);
         
         System.out.println("Cache Manager initialized");
         System.out.println("Max cache size: " + cacheManager.getMaxCacheSize());
@@ -70,12 +70,12 @@ public class CacheManagerDemo {
         cacheManager.shutdown();
     }
     
-    private static void cacheData(CacheManager manager, double lat, double lng, double radius, String location) {
+    private static void cacheData(LegacyCacheManagerDemo manager, double lat, double lng, double radius, String location) {
         System.out.println("Caching data for " + location + " (lat=" + lat + ", lng=" + lng + ")");
         manager.cacheRoadData(lat, lng, radius);
     }
     
-    private static void retrieveCachedData(CacheManager manager, double lat, double lng, double radius, String location) {
+    private static void retrieveCachedData(LegacyCacheManagerDemo manager, double lat, double lng, double radius, String location) {
         System.out.print("Retrieving data for " + location);
         CachedMapData data = manager.getCachedData(lat, lng, radius);
         
