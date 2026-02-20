@@ -32,6 +32,7 @@ public class GoogleMapsAPIController {
 
     public GoogleMapsAPIController() {
         this.client = new OkHttpClient();
+        this.techController = Optional.empty();
         try {
             FileHandler fh = new FileHandler(APIConfig.getAPILogFile()); // Log to a file named "mylog.log"
             logger.addHandler(fh);
