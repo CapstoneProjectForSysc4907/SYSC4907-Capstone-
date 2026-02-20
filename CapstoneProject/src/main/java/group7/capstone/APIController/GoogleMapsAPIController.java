@@ -27,6 +27,7 @@ public class GoogleMapsAPIController {
     private static final Logger logger = Logger.getLogger(GoogleMapsAPIController.class.getName());
 
     OkHttpClient client;
+
     Optional <TechnicalSubsystemController> techController;
 
 
@@ -50,6 +51,10 @@ public class GoogleMapsAPIController {
             e.printStackTrace();
         }
         this.techController = Optional.ofNullable(tech);
+    }
+
+    public void setTechController(Optional<TechnicalSubsystemController> techController) {
+        this.techController = techController;
     }
 
     public StreetViewImage GetStreetViewImage(double lat, double lon, int head) throws IOException {
