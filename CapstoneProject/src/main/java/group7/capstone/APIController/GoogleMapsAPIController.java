@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import group7.capstone.caching.RoadSegment;
+import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 import okhttp3.*;
 
 import javax.imageio.ImageIO;
@@ -26,6 +27,8 @@ public class GoogleMapsAPIController {
     private static final Logger logger = Logger.getLogger(GoogleMapsAPIController.class.getName());
 
     OkHttpClient client;
+    Optional <TechnicalSubsystemController> techController;
+
 
     public GoogleMapsAPIController() {
         this.client = new OkHttpClient();
@@ -35,6 +38,17 @@ public class GoogleMapsAPIController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public GoogleMapsAPIController(TechnicalSubsystemController tech) {
+        this.client = new OkHttpClient();
+        try {
+            FileHandler fh = new FileHandler(APIConfig.getAPILogFile()); // Log to a file named "mylog.log"
+            logger.addHandler(fh);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.techController = Optional.ofNullable(tech);
     }
 
     public StreetViewImage GetStreetViewImage(double lat, double lon, int head) throws IOException {
@@ -116,6 +130,7 @@ public class GoogleMapsAPIController {
                 }
             }
             responseDomain.setSnappedPoints(segments);
+            techController.ifPresent(technicalSubsystemController -> technicalSubsystemController.setRouteFromApi(responseDomain));
         } catch (IOException e) {
             logger.warning("google api call failed");
             throw new RuntimeException(e);
