@@ -31,7 +31,11 @@ public class Main {
         System.out.println("Initial road loaded: geoPts=" + controller.getGeoPointCount()
                 + " segs=" + controller.getPhysicsSegmentCount());
 
-        float dt = 1f / 60f;
+        // --- Fixed-step timing (target 60 Hz) ---
+        final float dt = 1f / 60f;
+        long frameNanos = (long) (dt * 1_000_000_000L);
+        long nextTick = System.nanoTime();
+
         float simTime = 0f;
 
         // Current controls (updated every frame from InputHandler)
@@ -70,8 +74,8 @@ public class Main {
             if (InputHandler.isLeft())  steering -= STEER_MAG;
             if (InputHandler.isRight()) steering += STEER_MAG;
 
+            // ---- Step sim ----
             controller.updateAndMaybeRequestMoreRoad(throttle, brake, steering, dt);
-
             simTime += dt;
 
             if (simTime - lastPrint >= 0.5f) {
@@ -88,6 +92,17 @@ public class Main {
                                 + " | segs=" + controller.getPhysicsSegmentCount()
                                 + " | geoPts=" + controller.getGeoPointCount()
                 );
+            }
+
+            // ---- Frame pacing ----
+            nextTick += frameNanos;
+            long sleep = nextTick - System.nanoTime();
+            if (sleep > 0) {
+                // sleep(ms, ns)
+                Thread.sleep(sleep / 1_000_000L, (int) (sleep % 1_000_000L));
+            } else {
+                // If we're behind, reset so we don't spiral into huge negative sleep
+                nextTick = System.nanoTime();
             }
         }
 

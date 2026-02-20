@@ -2,9 +2,9 @@
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2026-02-20T19:28:41.592173400Z</date>
-  <millis>1771615721592</millis>
-  <nanos>173400</nanos>
+  <date>2026-02-20T19:30:30.868136800Z</date>
+  <millis>1771615830868</millis>
+  <nanos>136800</nanos>
   <sequence>3</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
@@ -14,9 +14,9 @@
   <message>finding closest road to: lat=45.424, lon=-75.695</message>
 </record>
 <record>
-  <date>2026-02-20T19:28:42.335704800Z</date>
-  <millis>1771615722335</millis>
-  <nanos>704800</nanos>
+  <date>2026-02-20T19:30:31.521158300Z</date>
+  <millis>1771615831521</millis>
+  <nanos>158300</nanos>
   <sequence>4</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
