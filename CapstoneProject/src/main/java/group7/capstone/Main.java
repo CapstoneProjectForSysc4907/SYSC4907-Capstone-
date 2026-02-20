@@ -34,29 +34,41 @@ public class Main {
         float dt = 1f / 60f;
         float simTime = 0f;
 
-        float throttle = 0.85f;
+        // Current controls (updated every frame from InputHandler)
+        float throttle = 0.0f;
         float brake = 0.0f;
         float steering = 0.0f;
+
+        // Tuning knobs
+        final float THROTTLE_ON = 0.85f;
+        final float BRAKE_ON = 0.80f;
+        final float STEER_MAG = 0.35f;
 
         float lastPrint = 0f;
         float endTime = 30f;
 
-
-        //initializes key reading
+        // Initializes key reading
         try {
             GlobalScreen.registerNativeHook();
-        }
-        catch (NativeHookException ex) {
+        } catch (NativeHookException ex) {
             System.err.println("There was a problem registering the native hook.");
             System.err.println(ex.getMessage());
-
             System.exit(1);
         }
         GlobalScreen.addNativeKeyListener(new InputHandler());
 
-        while (simTime < endTime) {
+        while (simTime < endTime && !InputHandler.isExitRequested()) {
 
-            steering = (float) Math.sin(simTime * 0.25f) * 0.10f;
+            // ---- Read input state each frame ----
+            throttle = InputHandler.isForward() ? THROTTLE_ON : 0.0f;
+            brake    = InputHandler.isBrake()   ? BRAKE_ON    : 0.0f;
+
+            // Optional policy: if braking, cut throttle
+            if (brake > 0f) throttle = 0f;
+
+            steering = 0.0f;
+            if (InputHandler.isLeft())  steering -= STEER_MAG;
+            if (InputHandler.isRight()) steering += STEER_MAG;
 
             controller.updateAndMaybeRequestMoreRoad(throttle, brake, steering, dt);
 
@@ -78,6 +90,9 @@ public class Main {
                 );
             }
         }
+
+        // Best-effort cleanup (in case ESC wasn’t used)
+        try { GlobalScreen.unregisterNativeHook(); } catch (Exception ignored) {}
 
         System.out.println("Done.");
     }
