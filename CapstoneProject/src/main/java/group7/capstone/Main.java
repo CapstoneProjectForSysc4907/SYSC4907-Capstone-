@@ -1,9 +1,11 @@
 package group7.capstone;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
 import com.jme3.system.NativeLibraryLoader;
-import group7.capstone.APIController.APIResponseDomain;
-import group7.capstone.APIController.GoogleMapsAPIController;
+import group7.capstone.APIController.*;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
+import group7.capstone.caching.RoadApiCacheManager;
 
 public class Main {
 
@@ -13,14 +15,16 @@ public class Main {
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
         GoogleMapsAPIController googleApi = new GoogleMapsAPIController();
-        TechnicalSubsystemController controller = new TechnicalSubsystemController(googleApi);
+        RoadApiCacheManager roadCache = new RoadApiCacheManager(googleApi);
+        TechnicalSubsystemController controller = new TechnicalSubsystemController(googleApi, roadCache);
 
         double startLat = 45.4240;
         double startLon = -75.6950;
         int startHeadDeg = 0; // degrees from north
 
         System.out.println("Requesting initial road...");
-        APIResponseDomain initialRoad = googleApi.getStreet(startLat, startLon, startHeadDeg);
+        APIResponseDomain initialRoad = roadCache.getStreet(startLat, startLon, startHeadDeg);
+        System.out.println(roadCache.getStats());
         controller.setRouteFromApi(initialRoad);
 
         System.out.println("Initial road loaded: geoPts=" + controller.getGeoPointCount()
@@ -35,6 +39,19 @@ public class Main {
 
         float lastPrint = 0f;
         float endTime = 30f;
+
+
+        //initializes key reading
+        try {
+            GlobalScreen.registerNativeHook();
+        }
+        catch (NativeHookException ex) {
+            System.err.println("There was a problem registering the native hook.");
+            System.err.println(ex.getMessage());
+
+            System.exit(1);
+        }
+        GlobalScreen.addNativeKeyListener(new InputHandler());
 
         while (simTime < endTime) {
 

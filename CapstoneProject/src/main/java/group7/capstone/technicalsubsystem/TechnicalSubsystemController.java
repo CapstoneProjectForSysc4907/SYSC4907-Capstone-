@@ -3,6 +3,7 @@ package group7.capstone.technicalsubsystem;
 import com.jme3.math.Vector3f;
 import group7.capstone.APIController.APIResponseDomain;
 import group7.capstone.APIController.GoogleMapsAPIController;
+import group7.capstone.caching.RoadApiCacheManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +17,9 @@ public class TechnicalSubsystemController {
     // Injected external API controller (cannot modify it)
     private final GoogleMapsAPIController googleApi;
 
+    // Optional cache wrapper for getStreet()
+    private final RoadApiCacheManager roadCache;
+
     private List<PhysicsRoadSegment> activeRouteSegments = Collections.emptyList();
 
     // ---- “need more road” policy ----
@@ -26,12 +30,17 @@ public class TechnicalSubsystemController {
     private static final float NEED_MORE_THRESHOLD_M = 60f; // when remaining < this, request more
     private static final float REQUEST_COOLDOWN_S = 1.5f;   // avoid spamming
 
-    public TechnicalSubsystemController(GoogleMapsAPIController googleApi) {
+
+    public TechnicalSubsystemController(GoogleMapsAPIController googleApi, RoadApiCacheManager roadCache) {
         this.googleApi = googleApi;
+        this.roadCache = roadCache;
 
         this.world = new MapObject();
         this.car = new CarObject("Car_01", world);
         this.roadPipeline = new RoadPipelineController(2, 3.7f);
+    }
+    public TechnicalSubsystemController(GoogleMapsAPIController googleApi) {
+        this(googleApi, null);
     }
 
     /**
@@ -99,7 +108,6 @@ public class TechnicalSubsystemController {
     }
 
     private void requestMoreRoadNow() {
-        // Mark as in-flight BEFORE calling
         roadRequestInFlight = true;
 
         PhysicsRoadSegment seg = car.getCurrentSegment();
@@ -112,12 +120,12 @@ public class TechnicalSubsystemController {
 
         double lat = seg.getOriginalSegment().getLatitude();
         double lon = seg.getOriginalSegment().getLongitude();
-
-        // IMPORTANT: Google controller expects HEADING IN DEGREES
         int headDeg = car.getHeadingDegrees();
 
-        // Call external API (cannot modify)
-        APIResponseDomain more = googleApi.getStreet(lat, lon, headDeg);
+        // Call external API
+        APIResponseDomain more = (roadCache != null)
+                ? roadCache.getStreet(lat, lon, headDeg)
+                : googleApi.getStreet(lat, lon, headDeg);
 
         // Append into our road pipeline
         extendRouteFromApi(more);

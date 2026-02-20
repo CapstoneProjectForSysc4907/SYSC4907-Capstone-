@@ -2,10 +2,10 @@
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2026-02-07T17:15:12.745582800Z</date>
-  <millis>1770484512745</millis>
-  <nanos>582800</nanos>
-  <sequence>2</sequence>
+  <date>2026-02-18T01:51:32.293544200Z</date>
+  <millis>1771379492293</millis>
+  <nanos>544200</nanos>
+  <sequence>3</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
@@ -14,15 +14,27 @@
   <message>finding closest road to: lat=45.424, lon=-75.695</message>
 </record>
 <record>
-  <date>2026-02-07T17:15:14.000481300Z</date>
-  <millis>1770484514000</millis>
-  <nanos>481300</nanos>
-  <sequence>3</sequence>
+  <date>2026-02-18T01:51:32.948517400Z</date>
+  <millis>1771379492948</millis>
+  <nanos>517400</nanos>
+  <sequence>4</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
   <method>getStreet</method>
   <thread>1</thread>
   <message>result returned properly</message>
+</record>
+<record>
+  <date>2026-02-18T01:51:33.017070100Z</date>
+  <millis>1771379493017</millis>
+  <nanos>70100</nanos>
+  <sequence>5</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>exiting getStreet function</message>
 </record>
 </log>
