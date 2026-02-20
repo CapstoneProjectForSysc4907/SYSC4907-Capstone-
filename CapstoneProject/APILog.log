@@ -2,9 +2,9 @@
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2026-02-18T01:51:32.293544200Z</date>
-  <millis>1771379492293</millis>
-  <nanos>544200</nanos>
+  <date>2026-02-20T14:37:48.119919400Z</date>
+  <millis>1771598268119</millis>
+  <nanos>919400</nanos>
   <sequence>3</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
@@ -14,9 +14,9 @@
   <message>finding closest road to: lat=45.424, lon=-75.695</message>
 </record>
 <record>
-  <date>2026-02-18T01:51:32.948517400Z</date>
-  <millis>1771379492948</millis>
-  <nanos>517400</nanos>
+  <date>2026-02-20T14:37:48.791556Z</date>
+  <millis>1771598268791</millis>
+  <nanos>556000</nanos>
   <sequence>4</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
@@ -26,9 +26,9 @@
   <message>result returned properly</message>
 </record>
 <record>
-  <date>2026-02-18T01:51:33.017070100Z</date>
-  <millis>1771379493017</millis>
-  <nanos>70100</nanos>
+  <date>2026-02-20T14:37:48.850123500Z</date>
+  <millis>1771598268850</millis>
+  <nanos>123500</nanos>
   <sequence>5</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
@@ -37,4 +37,3 @@
   <thread>1</thread>
   <message>exiting getStreet function</message>
 </record>
-</log>

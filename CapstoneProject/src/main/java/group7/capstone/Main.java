@@ -6,6 +6,7 @@ import com.jme3.system.NativeLibraryLoader;
 import group7.capstone.APIController.*;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 import group7.capstone.caching.RoadApiCacheManager;
+import group7.capstone.technicalsubsystem.InputHandler;
 
 public class Main {
 
