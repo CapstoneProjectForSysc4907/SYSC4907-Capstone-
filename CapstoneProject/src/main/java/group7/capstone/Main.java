@@ -1,8 +1,11 @@
 package group7.capstone;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
 import com.jme3.system.NativeLibraryLoader;
 import group7.capstone.APIController.APIResponseDomain;
 import group7.capstone.APIController.GoogleMapsAPIController;
+import group7.capstone.technicalsubsystem.InputHandler;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 import group7.capstone.caching.RoadApiCacheManager;
 
@@ -38,6 +41,19 @@ public class Main {
 
         float lastPrint = 0f;
         float endTime = 30f;
+
+
+        //initializes key reading
+        try {
+            GlobalScreen.registerNativeHook();
+        }
+        catch (NativeHookException ex) {
+            System.err.println("There was a problem registering the native hook.");
+            System.err.println(ex.getMessage());
+
+            System.exit(1);
+        }
+        GlobalScreen.addNativeKeyListener(new InputHandler());
 
         while (simTime < endTime) {
 
