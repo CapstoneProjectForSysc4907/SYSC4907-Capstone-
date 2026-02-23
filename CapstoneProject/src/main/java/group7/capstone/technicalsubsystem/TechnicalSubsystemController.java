@@ -148,4 +148,16 @@ public class TechnicalSubsystemController {
 
     public float getRemainingRoadMeters() { return car.getRemainingRoadMeters(); }
     public int getHeadingDegrees() { return car.getHeadingDegrees(); }
+
+    public double getCurrentLatitude() {
+        PhysicsRoadSegment seg = car.getCurrentSegment();
+        if (seg == null || seg.getOriginalSegment() == null) return Double.NaN;
+        return seg.getOriginalSegment().getLatitude();
+    }
+
+    public double getCurrentLongitude() {
+        PhysicsRoadSegment seg = car.getCurrentSegment();
+        if (seg == null || seg.getOriginalSegment() == null) return Double.NaN;
+        return seg.getOriginalSegment().getLongitude();
+    }
 }

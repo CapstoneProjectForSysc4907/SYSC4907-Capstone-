@@ -95,4 +95,11 @@ public class InputHandler implements NativeKeyListener {
     public static boolean isLeft()    { return left.get(); }
     public static boolean isRight()   { return right.get(); }
     public static boolean isExitRequested() { return exitRequested.get(); }
+    public static void requestExit() {
+        exitRequested.set(true);
+        try {
+            GlobalScreen.unregisterNativeHook();
+        } catch (Exception ignored) {
+        }
+    }
 }
