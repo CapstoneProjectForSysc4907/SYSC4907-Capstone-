@@ -7,6 +7,7 @@ import group7.capstone.APIController.*;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 import group7.capstone.caching.RoadApiCacheManager;
 import group7.capstone.technicalsubsystem.InputHandler;
+import group7.capstone.technicalsubsystem.VehicleConfig;
 import group7.capstone.visuals.ImageLoader;
 import group7.capstone.visuals.GUI.SimulatorFrame;
 
@@ -25,6 +26,11 @@ public class Main {
         GoogleMapsAPIController googleApi = new GoogleMapsAPIController();
         RoadApiCacheManager roadCache = new RoadApiCacheManager(googleApi);
         TechnicalSubsystemController controller = new TechnicalSubsystemController(googleApi, roadCache);
+
+        // ---- driving feel tuning (fast to adjust, no architecture changes) ----
+        VehicleConfig cfg = VehicleConfig.getInstance();
+        cfg.setMaxThrottleForce(6500f);
+        cfg.setMaxAccelRate(12000f);
 
         double startLat = 45.3170722;
         double startLon = -76.0796364;
@@ -73,7 +79,7 @@ public class Main {
         float steering = 0.0f;
 
         // Tuning knobs
-        final float THROTTLE_ON = 0.85f;
+        final float THROTTLE_ON = 1.00f;
         final float BRAKE_ON = 0.80f;
         final float STEER_MAG = 0.35f;
 
@@ -85,11 +91,10 @@ public class Main {
         final float HUD_DT = 1f / 10f; // 10 Hz
 
         float imgTick = 0f;
-        final float IMG_DT = 5f; // 1 Hz max
+        final float IMG_DT = 0.75f;
 
-        // last requested image key
-        double lastImgLat = Double.NaN;
-        double lastImgLon = Double.NaN;
+        // last requested image reference (in world metres + heading)
+        com.jme3.math.Vector3f lastImgPos = null;
         int lastImgHeading = -1;
 
         // Initializes key reading
@@ -166,19 +171,27 @@ public class Main {
                 double lon = controller.getCurrentLongitude();
                 int head = controller.getHeadingDegrees();
 
+                // Avoid building up a backlog of image loads.
+                if (imageLoader.getLoadingCount() >= 2) {
+                    // keep the last image until the loader catches up
+                    continue;
+                }
+
                 boolean haveGeo = !Double.isNaN(lat) && !Double.isNaN(lon);
 
-                // avoid spamming the same request
-                boolean changedEnough =
-                        !haveGeo ? false :
-                        Double.isNaN(lastImgLat)
-                                || Math.abs(lat - lastImgLat) > 0.0001
-                                || Math.abs(lon - lastImgLon) > 0.0001
-                                || Math.abs(head - lastImgHeading) >= 10;
+                // Use world-space distance (metres) to decide when to refresh the image.
+                com.jme3.math.Vector3f pos = controller.getPosition();
+                float distMoved = (lastImgPos == null) ? Float.POSITIVE_INFINITY : pos.distance(lastImgPos);
+
+                // Avoid spamming the same request
+                boolean changedEnough = haveGeo && (
+                        lastImgPos == null
+                                || distMoved >= 12f
+                                || Math.abs(head - lastImgHeading) >= 6
+                );
 
                 if (changedEnough) {
-                    lastImgLat = lat;
-                    lastImgLon = lon;
+                    lastImgPos = pos.clone();
                     lastImgHeading = head;
 
                     SwingUtilities.invokeLater(() -> frame.getHud().setStatus("LOADING"));
