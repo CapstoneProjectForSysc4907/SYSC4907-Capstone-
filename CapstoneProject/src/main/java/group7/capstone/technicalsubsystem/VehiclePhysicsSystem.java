@@ -19,7 +19,7 @@ public class VehiclePhysicsSystem {
     private float offRoadAccumSeconds = 0f;
     private float teleportCooldownSeconds = 0f;
 
-    private static final float OFFROAD_HOLD_TIME = 0.25f;
+    private static final float OFFROAD_HOLD_TIME = 0.60f;
     private static final float TELEPORT_COOLDOWN = 1.0f;
 
     private float currentEngineForce;
@@ -112,6 +112,18 @@ public class VehiclePhysicsSystem {
         vehicleBody.setLinearVelocity(Vector3f.ZERO);
         vehicleBody.setAngularVelocity(Vector3f.ZERO);
         vehicleBody.clearForces();
+    }
+
+    /**
+     * Hard reset to a known-safe pose.
+     * Use this when you first load a route
+     */
+    public void hardResetTo(Vector3f pos, Vector3f forwardDirXZ) {
+        teleportTo(pos, forwardDirXZ);
+        currentEngineForce = 0f;
+        currentBrakeForce = 0f;
+        steeringInput = 0f;
+        steeringAngleDeg = 0f;
     }
 
     /** Remaining road distance ahead in metres. */

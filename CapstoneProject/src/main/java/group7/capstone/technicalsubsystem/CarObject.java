@@ -16,6 +16,9 @@ public class CarObject {
     private final PhysicsRigidBody body;
     private final VehicleConfig config = VehicleConfig.getInstance();
 
+    // Only do the initial "snap to road" once, when the first route is loaded.
+    private boolean routeInitialized = false;
+
     public CarObject(String id, MapObject world) {
         this.id = id;
         this.massOfCar = config.getMass();
@@ -33,6 +36,21 @@ public class CarObject {
 
     public void setRouteSegments(List<PhysicsRoadSegment> segments) {
         physics.setRouteSegments(segments);
+
+        // When a route is first loaded, start the car on the first segment.
+        if (!routeInitialized && segments != null && !segments.isEmpty()) {
+            PhysicsRoadSegment first = segments.get(0);
+            Vector3f start = first.getStartPoint();
+            Vector3f dir = first.getEndPoint().subtract(first.getStartPoint());
+            dir.y = 0f;
+            if (dir.lengthSquared() < 1e-6f) dir.set(0, 0, 1);
+            dir.normalizeLocal();
+
+            start.y = 0.50f;
+
+            physics.hardResetTo(start, dir);
+            routeInitialized = true;
+        }
     }
 
     public void update(float throttle, float brake, float steering, float dt) {

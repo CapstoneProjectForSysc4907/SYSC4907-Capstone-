@@ -7,6 +7,14 @@ import group7.capstone.APIController.*;
 import group7.capstone.technicalsubsystem.TechnicalSubsystemController;
 import group7.capstone.caching.RoadApiCacheManager;
 import group7.capstone.technicalsubsystem.InputHandler;
+import group7.capstone.technicalsubsystem.VehicleConfig;
+import group7.capstone.visuals.ImageLoader;
+import group7.capstone.visuals.GUI.SimulatorFrame;
+
+import javax.swing.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 
 public class Main {
 
@@ -19,9 +27,14 @@ public class Main {
         RoadApiCacheManager roadCache = new RoadApiCacheManager(googleApi);
         TechnicalSubsystemController controller = new TechnicalSubsystemController(googleApi, roadCache);
 
-        double startLat = 45.4240;
-        double startLon = -75.6950;
-        int startHeadDeg = 0; // degrees from north
+        // ---- driving feel tuning (fast to adjust, no architecture changes) ----
+        VehicleConfig cfg = VehicleConfig.getInstance();
+        cfg.setMaxThrottleForce(6500f);
+        cfg.setMaxAccelRate(12000f);
+
+        double startLat = 45.3170722;
+        double startLon = -76.0796364;
+        int startHeadDeg = 102; // degrees from north
 
         System.out.println("Requesting initial road...");
         APIResponseDomain initialRoad = roadCache.getStreet(startLat, startLon, startHeadDeg);
@@ -30,6 +43,28 @@ public class Main {
 
         System.out.println("Initial road loaded: geoPts=" + controller.getGeoPointCount()
                 + " segs=" + controller.getPhysicsSegmentCount());
+
+        // --- GUI setup (Swing) ---
+        SimulatorFrame[] frameRef = new SimulatorFrame[1];
+        SwingUtilities.invokeAndWait(() -> {
+            SimulatorFrame frame = new SimulatorFrame();
+            frame.setVisible(true);
+
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    InputHandler.requestExit();
+                }
+            });
+
+            // quick placeholder to avoid blank panel
+            frame.setStreetViewImage(new BufferedImage(1200, 800, BufferedImage.TYPE_INT_RGB));
+            frame.setFooterStatus("Loading...");
+            frameRef[0] = frame;
+        });
+
+        SimulatorFrame frame = frameRef[0];
+        ImageLoader imageLoader = new ImageLoader(googleApi);
 
         // --- Fixed-step timing (target 60 Hz) ---
         final float dt = 1f / 60f;
@@ -44,12 +79,23 @@ public class Main {
         float steering = 0.0f;
 
         // Tuning knobs
-        final float THROTTLE_ON = 0.85f;
+        final float THROTTLE_ON = 1.00f;
         final float BRAKE_ON = 0.80f;
         final float STEER_MAG = 0.35f;
 
         float lastPrint = 0f;
         float endTime = 30f;
+
+        // --- GUI update cadence (don’t spam EDT) ---
+        float hudTick = 0f;
+        final float HUD_DT = 1f / 10f; // 10 Hz
+
+        float imgTick = 0f;
+        final float IMG_DT = 0.75f;
+
+        // last requested image reference (in world metres + heading)
+        com.jme3.math.Vector3f lastImgPos = null;
+        int lastImgHeading = -1;
 
         // Initializes key reading
         try {
@@ -77,6 +123,90 @@ public class Main {
             // ---- Step sim ----
             controller.updateAndMaybeRequestMoreRoad(throttle, brake, steering, dt);
             simTime += dt;
+
+            // ---- GUI updates ----
+            hudTick += dt;
+            imgTick += dt;
+
+            if (hudTick >= HUD_DT && frame != null) {
+                hudTick = 0f;
+
+                double lat = controller.getCurrentLatitude();
+                double lon = controller.getCurrentLongitude();
+                int head = controller.getHeadingDegrees();
+                double kmh = controller.getSpeedKmh();
+
+                String status;
+                if (!controller.isOnRoad()) {
+                    status = "OFF_ROAD";
+                } else {
+                    float remaining = controller.getRemainingRoadMeters();
+                    status = (remaining < 60f) ? "NEED_MORE_ROAD" : "OK";
+                }
+
+                String footer = String.format(
+                        "segs=%d | remaining=%.1fm | imgCache=%d | loading=%d",
+                        controller.getPhysicsSegmentCount(),
+                        controller.getRemainingRoadMeters(),
+                        imageLoader.getCacheSize(),
+                        imageLoader.getLoadingCount()
+                );
+
+                SwingUtilities.invokeLater(() -> {
+                    frame.getHud().setSpeed(kmh);
+                    if (!Double.isNaN(lat) && !Double.isNaN(lon)) {
+                        frame.getHud().setLatLng(lat, lon);
+                    }
+                    frame.getHud().setHeading(head);
+                    frame.getHud().setStatus(status);
+                    frame.setFooterStatus(footer);
+                });
+            }
+
+            // Request Street View at most once per second, and only if we have geo.
+            if (imgTick >= IMG_DT && frame != null) {
+                imgTick = 0f;
+
+                double lat = controller.getCurrentLatitude();
+                double lon = controller.getCurrentLongitude();
+                int head = controller.getHeadingDegrees();
+
+                // Avoid building up a backlog of image loads.
+                if (imageLoader.getLoadingCount() >= 2) {
+                    // keep the last image until the loader catches up
+                    continue;
+                }
+
+                boolean haveGeo = !Double.isNaN(lat) && !Double.isNaN(lon);
+
+                // Use world-space distance (metres) to decide when to refresh the image.
+                com.jme3.math.Vector3f pos = controller.getPosition();
+                float distMoved = (lastImgPos == null) ? Float.POSITIVE_INFINITY : pos.distance(lastImgPos);
+
+                // Avoid spamming the same request
+                boolean changedEnough = haveGeo && (
+                        lastImgPos == null
+                                || distMoved >= 12f
+                                || Math.abs(head - lastImgHeading) >= 6
+                );
+
+                if (changedEnough) {
+                    lastImgPos = pos.clone();
+                    lastImgHeading = head;
+
+                    SwingUtilities.invokeLater(() -> frame.getHud().setStatus("LOADING"));
+
+                    imageLoader.loadImageAsync(lat, lon, head, img -> {
+                        SwingUtilities.invokeLater(() -> {
+                            frame.setStreetViewImage(img);
+                            // don’t overwrite OFF_ROAD if that’s currently true
+                            if (controller.isOnRoad()) {
+                                frame.getHud().setStatus("OK");
+                            }
+                        });
+                    });
+                }
+            }
 
             if (simTime - lastPrint >= 0.5f) {
                 lastPrint = simTime;
@@ -108,6 +238,7 @@ public class Main {
 
         // Best-effort cleanup (in case ESC wasn’t used)
         try { GlobalScreen.unregisterNativeHook(); } catch (Exception ignored) {}
+        try { imageLoader.shutdown(); } catch (Exception ignored) {}
 
         System.out.println("Done.");
     }
