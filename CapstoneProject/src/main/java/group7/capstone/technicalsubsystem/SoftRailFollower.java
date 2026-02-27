@@ -57,14 +57,42 @@ public class SoftRailFollower {
 
         Vector3f pos = physics.getPosition();
 
+        // Corridor tuning:
+        // - Lane metadata can be underspecified (e.g., "1 lane" for a normal 2-way road),
+        //   which makes laneWidth/2 too tight.
+        // - At higher speeds, small physics drift can briefly push us outside a tight corridor.
+        // Fix:
+        //   (1) minimum corridor width
+        //   (2) hysteresis: "outer" threshold for staying on-road, "inner" threshold to re-enter
+        //   (3) speed-based padding
+        float speedKmh = physics.getSpeedKmh();
+        float speedPad = clamp(1.25f + (speedKmh / 100f) * 1.5f, 1.25f, 3.5f);
+
         float bestDist2 = Float.POSITIVE_INFINITY;
         Vector3f bestPoint = null;
         Vector3f bestForward = null;
 
+        // Fast path: if we were on a segment last frame, try to stay on it with a looser band.
+        if (currentIndex >= 0 && currentIndex < segments.size()) {
+            PhysicsRoadSegment seg = segments.get(currentIndex);
+            float innerHalfWidth = computeInnerHalfWidth(seg);
+            float outerHalfWidth = innerHalfWidth + speedPad;
+
+            ClosestPoint cp = closestPointOnSegmentXZ_WithT(pos, seg.getStartPoint(), seg.getEndPoint());
+            float dist = (float) Math.sqrt(cp.dist2);
+
+            if (dist <= outerHalfWidth) {
+                currentSegment = seg;
+                currentT = cp.t;
+                return new Result(false, null, null, dist, currentIndex, cp.t);
+            }
+        }
+
+        // Full scan: must be inside the tighter band to be considered "back on-road".
         for (int i = 0; i < segments.size(); i++) {
             PhysicsRoadSegment seg = segments.get(i);
 
-            float halfWidth = (seg.getLaneCount() * seg.getLaneWidth()) * 0.5f;
+            float innerHalfWidth = computeInnerHalfWidth(seg);
 
             ClosestPoint cp = closestPointOnSegmentXZ_WithT(
                     pos,
@@ -75,7 +103,7 @@ public class SoftRailFollower {
             float dist = (float) Math.sqrt(cp.dist2);
 
             // Inside corridor => ON ROAD
-            if (dist <= halfWidth) {
+            if (dist <= innerHalfWidth) {
                 currentSegment = seg;
                 currentIndex = i;
                 currentT = cp.t;
@@ -112,6 +140,22 @@ public class SoftRailFollower {
     }
 
     // ------------------------------------------------------------------
+
+    private static float computeInnerHalfWidth(PhysicsRoadSegment seg) {
+        float base = (seg.getLaneCount() * seg.getLaneWidth()) * 0.5f;
+
+        // Minimum corridor: 8m total width (4m each side)
+        float minHalfWidth = 4.0f;
+
+        // Fixed padding so the corridor isn't razor-thin at low speed.
+        float fixedPad = 1.0f;
+
+        return Math.max(base, minHalfWidth) + fixedPad;
+    }
+
+    private static float clamp(float v, float lo, float hi) {
+        return Math.max(lo, Math.min(hi, v));
+    }
 
     private static class ClosestPoint {
         final Vector3f point;
