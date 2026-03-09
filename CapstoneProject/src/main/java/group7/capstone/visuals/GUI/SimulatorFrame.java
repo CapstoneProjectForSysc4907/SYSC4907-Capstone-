@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 
 public class SimulatorFrame extends JFrame {
 
-    private final ImagePanel imagePanel;
+    private final ImagePanel imagePanel, mapPanel;
     private final HudPanel hudPanel;
     private final JLabel footerLabel;
 
@@ -35,6 +35,9 @@ public class SimulatorFrame extends JFrame {
         // center image
         imagePanel = new ImagePanel();
 
+        // map
+        mapPanel = new ImagePanel();
+
         // right HUD
         hudPanel = new HudPanel();
 
@@ -54,6 +57,7 @@ public class SimulatorFrame extends JFrame {
 
         add(header, BorderLayout.NORTH);
         add(imagePanel, BorderLayout.CENTER);
+        add(mapPanel, BorderLayout.WEST);
         add(hudPanel, BorderLayout.EAST);
         add(footer, BorderLayout.SOUTH);
 
@@ -64,6 +68,8 @@ public class SimulatorFrame extends JFrame {
     public void setStreetViewImage(BufferedImage img) {
         imagePanel.setImage(img);
     }
+
+    public void setMapImage(BufferedImage img){mapPanel.setImage(img);}
 
     public HudPanel getHud() {
         return hudPanel;

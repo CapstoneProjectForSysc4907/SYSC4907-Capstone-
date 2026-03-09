@@ -59,12 +59,14 @@ public class Main {
 
             // quick placeholder to avoid blank panel
             frame.setStreetViewImage(new BufferedImage(1200, 800, BufferedImage.TYPE_INT_RGB));
+            frame.setMapImage(new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB));
             frame.setFooterStatus("Loading...");
             frameRef[0] = frame;
         });
 
         SimulatorFrame frame = frameRef[0];
         ImageLoader imageLoader = new ImageLoader(googleApi);
+        ImageLoader mapLoader = new ImageLoader(googleApi);
 
         // --- Fixed-step timing (target 60 Hz) ---
         final float dt = 1f / 60f;
@@ -177,6 +179,11 @@ public class Main {
                     continue;
                 }
 
+                if (mapLoader.getLoadingCount() >= 2) {
+                    // keep the last image until the loader catches up
+                    continue;
+                }
+
                 boolean haveGeo = !Double.isNaN(lat) && !Double.isNaN(lon);
 
                 // Use world-space distance (metres) to decide when to refresh the image.
@@ -199,6 +206,16 @@ public class Main {
                     imageLoader.loadImageAsync(lat, lon, head, img -> {
                         SwingUtilities.invokeLater(() -> {
                             frame.setStreetViewImage(img);
+                            // don’t overwrite OFF_ROAD if that’s currently true
+                            if (controller.isOnRoad()) {
+                                frame.getHud().setStatus("OK");
+                            }
+                        });
+                    });
+
+                    mapLoader.loadMapAsync(lat, lon, head, img -> {
+                        SwingUtilities.invokeLater(() -> {
+                            frame.setMapImage(img);
                             // don’t overwrite OFF_ROAD if that’s currently true
                             if (controller.isOnRoad()) {
                                 frame.getHud().setStatus("OK");
@@ -238,7 +255,8 @@ public class Main {
 
         // Best-effort cleanup (in case ESC wasn’t used)
         try { GlobalScreen.unregisterNativeHook(); } catch (Exception ignored) {}
-        try { imageLoader.shutdown(); } catch (Exception ignored) {}
+        try { imageLoader.shutdown();
+            mapLoader.shutdown();} catch (Exception ignored) {}
 
         System.out.println("Done.");
     }
