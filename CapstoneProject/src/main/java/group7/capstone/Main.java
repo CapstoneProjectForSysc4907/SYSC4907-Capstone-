@@ -59,7 +59,6 @@ public class Main {
 
             // quick placeholder to avoid blank panel
             frame.setStreetViewImage(new BufferedImage(1200, 800, BufferedImage.TYPE_INT_RGB));
-            frame.setMapImage(new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB));
             frame.setFooterStatus("Loading...");
             frameRef[0] = frame;
         });
@@ -215,7 +214,7 @@ public class Main {
 
                     mapLoader.loadMapAsync(lat, lon, head, img -> {
                         SwingUtilities.invokeLater(() -> {
-                            frame.setMapImage(img);
+                            frame.getHud().setMapImage(img);
                             // don’t overwrite OFF_ROAD if that’s currently true
                             if (controller.isOnRoad()) {
                                 frame.getHud().setStatus("OK");
