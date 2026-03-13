@@ -132,10 +132,9 @@ public class GoogleMapsAPIController {
     public APIResponseDomain getStreet(double lat, double lon, int head) {
         //Head is the cardinal direction
         logger.info("finding closest road to: lat=" + lat + ", lon=" + lon);
-        // FIX: reduced steps from 95 to 45. Combined with smaller dist in calculateNewCoords,
-        // this sends 46 points over ~200m instead of 96 points over ~2.6km.
-        // Prevents snap-to-roads from projecting straight past intersections onto wrong roads.
-        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 45) + "&key=" + APIConfig.getAPIKey();
+        // FIX: reduced steps to 10 (~44m total path). Short enough to not cross into wrong roads
+        // at dense urban intersections. interpolate=true fills in actual road geometry between points.
+        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 10) + "&key=" + APIConfig.getAPIKey();
         System.out.println(url);
         Request request = new Request.Builder()
                 .url(url)

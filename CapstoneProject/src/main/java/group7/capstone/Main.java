@@ -32,8 +32,8 @@ public class Main {
         cfg.setMaxThrottleForce(6500f);
         cfg.setMaxAccelRate(12000f);
 
-        double startLat = 45.2681093;
-        double startLon = -75.6455407;
+        double startLat = 45.4191133;
+        double startLon = -75.6995299;
         int startHeadDeg = 170; // degrees from north
 
         System.out.println("Requesting initial road...");
