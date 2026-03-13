@@ -69,8 +69,11 @@ public class VehiclePhysicsSystem {
 
         if (lastRailResult == null) return false;
 
-        if (lastRailResult.offRoad) offRoadAccumSeconds += dt;
-        else offRoadAccumSeconds = 0f;
+        if (lastRailResult.offRoad) {
+            offRoadAccumSeconds += dt;
+        } else {
+            offRoadAccumSeconds = 0f;
+        }
 
         if (teleportCooldownSeconds > 0f) return false;
 
@@ -191,6 +194,48 @@ public class VehiclePhysicsSystem {
         return rail.getCurrentSegment();
     }
 
+    public double getCurrentLatitude() {
+        if (routeSegments == null || routeSegments.isEmpty()) return Double.NaN;
+        if (lastRailResult == null) return Double.NaN;
+
+        int idx = lastRailResult.segmentIndex;
+        float t = lastRailResult.tOnSegment;
+
+        if (idx < 0 || idx >= routeSegments.size()) return Double.NaN;
+
+        PhysicsRoadSegment cur = routeSegments.get(idx);
+        RoadSegment a = cur.getOriginalSegment();
+        if (a == null) return Double.NaN;
+
+        if (idx + 1 >= routeSegments.size()) return a.getLatitude();
+
+        RoadSegment b = routeSegments.get(idx + 1).getOriginalSegment();
+        if (b == null) return a.getLatitude();
+
+        return a.getLatitude() + (b.getLatitude() - a.getLatitude()) * t;
+    }
+
+    public double getCurrentLongitude() {
+        if (routeSegments == null || routeSegments.isEmpty()) return Double.NaN;
+        if (lastRailResult == null) return Double.NaN;
+
+        int idx = lastRailResult.segmentIndex;
+        float t = lastRailResult.tOnSegment;
+
+        if (idx < 0 || idx >= routeSegments.size()) return Double.NaN;
+
+        PhysicsRoadSegment cur = routeSegments.get(idx);
+        RoadSegment a = cur.getOriginalSegment();
+        if (a == null) return Double.NaN;
+
+        if (idx + 1 >= routeSegments.size()) return a.getLongitude();
+
+        RoadSegment b = routeSegments.get(idx + 1).getOriginalSegment();
+        if (b == null) return a.getLongitude();
+
+        return a.getLongitude() + (b.getLongitude() - a.getLongitude()) * t;
+    }
+
     // ---------------- ENGINE / MOTION ----------------
 
     private void applyThrottle(float throttle, float dt) {
@@ -238,8 +283,8 @@ public class VehiclePhysicsSystem {
 
     // ---------------- STEERING (PLAYER ONLY) ----------------
 
-    private float steeringInput = 0f;    // raw [-1..1]
-    private float steeringAngleDeg = 0f; // applied (smoothed)
+    private float steeringInput = 0f;
+    private float steeringAngleDeg = 0f;
 
     private static final float STEER_EPS_DEG = 0.01f;
     private static final float STEER_RATE_DEG_PER_SEC = 120f;

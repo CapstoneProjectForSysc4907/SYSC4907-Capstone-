@@ -32,9 +32,9 @@ public class Main {
         cfg.setMaxThrottleForce(6500f);
         cfg.setMaxAccelRate(12000f);
 
-        double startLat = 45.2285162;
-        double startLon = -76.1100138;
-        int startHeadDeg = 102; // degrees from north
+        double startLat = 45.2681093;
+        double startLon = -75.6455407;
+        int startHeadDeg = 170; // degrees from north
 
         System.out.println("Requesting initial road...");
         APIResponseDomain initialRoad = roadCache.getStreet(startLat, startLon, startHeadDeg);
