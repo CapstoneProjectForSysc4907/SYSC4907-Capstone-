@@ -19,7 +19,7 @@ public class VehiclePhysicsSystem {
     private float offRoadAccumSeconds = 0f;
     private float teleportCooldownSeconds = 0f;
 
-    private static final float OFFROAD_HOLD_TIME = 0.60f;
+    private static final float OFFROAD_HOLD_TIME = 1.2f;
     private static final float TELEPORT_COOLDOWN = 1.0f;
 
     private float currentEngineForce;
@@ -50,7 +50,7 @@ public class VehiclePhysicsSystem {
     /** Call ONCE per frame (before isOnRoad / remaining road / teleport decisions). */
     public void updateRailState(float dt) {
         if (routeSegments == null || routeSegments.isEmpty()) {
-            lastRailResult = new SoftRailFollower.Result(false, null, null, 0f, -1, 0f);
+            lastRailResult = new SoftRailFollower.Result(false, null, null, null, 0f, -1, 0f);
             return;
         }
         lastRailResult = rail.check(this, routeSegments);
@@ -92,7 +92,49 @@ public class VehiclePhysicsSystem {
         Vector3f target = lastRailResult.snapPoint.clone();
         target.y = getPosition().y + 0.05f;
 
-        teleportTo(target, lastRailResult.forwardXZ);
+        Vector3f snappedHeading = chooseBestSnapHeading(lastRailResult.forwardXZ, lastRailResult.rightXZ);
+        teleportTo(target, snappedHeading);
+    }
+
+    private Vector3f chooseBestSnapHeading(Vector3f roadForward, Vector3f roadRight) {
+        Vector3f currentForward = vehicleBody.getPhysicsRotation().mult(Vector3f.UNIT_Z);
+        currentForward.y = 0f;
+
+        if (currentForward.lengthSquared() < 1e-6f) {
+            if (roadForward != null && roadForward.lengthSquared() >= 1e-6f) {
+                return roadForward.clone().normalizeLocal();
+            }
+            return new Vector3f(0, 0, 1);
+        }
+        currentForward.normalizeLocal();
+
+        Vector3f forward = (roadForward != null && roadForward.lengthSquared() >= 1e-6f)
+                ? roadForward.clone().normalizeLocal()
+                : new Vector3f(0, 0, 1);
+
+        Vector3f right = (roadRight != null && roadRight.lengthSquared() >= 1e-6f)
+                ? roadRight.clone().normalizeLocal()
+                : new Vector3f(forward.z, 0f, -forward.x).normalizeLocal();
+
+        Vector3f[] candidates = new Vector3f[] {
+                forward.clone(),
+                forward.negate(),
+                right.clone(),
+                right.negate()
+        };
+
+        Vector3f best = candidates[0];
+        float bestDot = currentForward.dot(best);
+
+        for (int i = 1; i < candidates.length; i++) {
+            float d = currentForward.dot(candidates[i]);
+            if (d > bestDot) {
+                bestDot = d;
+                best = candidates[i];
+            }
+        }
+
+        return best;
     }
 
     private void teleportTo(Vector3f pos, Vector3f forwardDirXZ) {
