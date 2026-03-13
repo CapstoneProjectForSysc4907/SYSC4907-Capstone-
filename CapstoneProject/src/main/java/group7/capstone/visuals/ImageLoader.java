@@ -140,6 +140,58 @@ public class ImageLoader {
     }
 
     /**
+     * Load a Map image from cache or API
+     *
+     * @param lat Latitude
+     * @param lng Longitude
+     * @param heading Camera heading (degrees)
+     * @return BufferedImage
+     */
+    public BufferedImage loadMapImage(double lat, double lng, int heading) {
+        String cacheKey = generateCacheKey(lat, lng, heading);
+
+        // checks cache first
+        if (imageCache.containsKey(cacheKey)) {
+            cacheHits++;
+            return imageCache.get(cacheKey);
+        }
+
+        cacheMisses++;
+
+        try {
+            // Fetch the street view image from API
+            BufferedImage image = apiController.GetMapImage(
+                    lat,
+                    lng
+            );
+
+            if (image == null) {
+                failedLoads++;
+                return getPlaceholderImage();
+            }
+
+            // Validate image
+            if (!isImageValid(image)) {
+                failedLoads++;
+                return getPlaceholderImage();
+            }
+
+            // Format for GUI
+            BufferedImage formattedImage = formatImageForGUI(image);
+
+            // Cache the image
+            storeInCache(cacheKey, formattedImage);
+
+            successfulLoads++;
+            return formattedImage;
+
+        } catch (IOException e) {
+            failedLoads++;
+            return getPlaceholderImage();
+        }
+    }
+
+    /**
      * Load a Street View image asynchronously
      *
      * @param lat Latitude
@@ -155,6 +207,35 @@ public class ImageLoader {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return loadStreetViewImage(lat, lng, heading);
+            } catch (Exception e) {
+                return getPlaceholderImage();
+            } finally {
+                currentlyLoading.decrementAndGet();
+            }
+        }, executorService).thenApply(image -> {
+            if (callback != null) {
+                callback.accept(image);
+            }
+            return image;
+        });
+    }
+
+    /**
+     * Load a Street View image asynchronously
+     *
+     * @param lat Latitude
+     * @param lng Longitude
+     * @param heading Camera heading
+     * @param callback Function to call when image is loaded
+     * @return CompletableFuture for the loading operation
+     */
+    public CompletableFuture<BufferedImage> loadMapAsync(double lat, double lng, int heading,
+                                                           Consumer<BufferedImage> callback) {
+        currentlyLoading.incrementAndGet();
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return loadMapImage(lat, lng, heading);
             } catch (Exception e) {
                 return getPlaceholderImage();
             } finally {

@@ -57,6 +57,33 @@ public class GoogleMapsAPIController {
         this.techController = techController;
     }
 
+    public BufferedImage GetMapImage(double lat, double lon) throws IOException {
+        /*
+        gets an image from the google maps static streetview api
+        latitude and longitude are in degrees from prime meridian and equator
+        heading is in degrees from north
+        returns a 120 slice of the panorama as a buffered image
+        each costs 7 dollars per 1000 calls with 10,000 call buffer
+         */
+        logger.info("requesting map from: lat=" + lat + ", lon=" + lon);
+        String url = APIConfig.Base_URL_MAP + "&markers=" + lat + ", " + lon + "&key=" + APIConfig.getAPIKey();
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            assert response.body() != null;
+            logger.info("result returned is probably map");
+
+            //ready to switch out to match image loader
+            //return new StreetViewImage(response.body().bytes(), head, lat, lon);
+            return ImageIO.read(response.body().byteStream());
+
+        } catch (IOException e) {
+            logger.warning("google api call failed");
+            throw new RuntimeException(e);
+        }
+    }
+
     public StreetViewImage GetStreetViewImage(double lat, double lon, int head) throws IOException {
         /*
         gets an image from the google maps static streetview api
@@ -118,7 +145,7 @@ public class GoogleMapsAPIController {
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;
             logger.info("result returned properly");
-            Map<String, Object> jsonResponseObject = new Gson().fromJson(response.body().charStream(), Map.class);
+            Map jsonResponseObject = new Gson().fromJson(response.body().charStream(), Map.class);
             ArrayList<Map> points = (ArrayList<Map>) jsonResponseObject.get("snappedPoints");
             Map<String, Object> location;
 

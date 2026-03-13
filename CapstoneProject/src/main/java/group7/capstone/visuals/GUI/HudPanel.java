@@ -3,6 +3,7 @@ package group7.capstone.visuals.GUI;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class HudPanel extends JPanel {
 
@@ -10,6 +11,7 @@ public class HudPanel extends JPanel {
     private final JLabel latLngValue = new JLabel("-");
     private final JLabel headingValue = new JLabel("-");
     private final JLabel statusValue = new JLabel("idle");
+    private final ImagePanel mapPanel;
 
     public HudPanel() {
         setBackground(UITheme.PANEL);
@@ -25,10 +27,14 @@ public class HudPanel extends JPanel {
         content.setOpaque(false);
         content.setLayout(new GridLayout(0, 1, 10, 10));
 
+        // map
+        mapPanel = new ImagePanel();
+
         content.add(makeCard("Speed", speedValue));
         content.add(makeCard("Lat / Lng", latLngValue));
         content.add(makeCard("Heading", headingValue));
         content.add(makeCard("Status", statusValue));
+        content.add(mapPanel);
 
         add(title, BorderLayout.NORTH);
         add(content, BorderLayout.CENTER);
@@ -78,4 +84,6 @@ public class HudPanel extends JPanel {
     public void setStatus(String status) {
         statusValue.setText(status);
     }
+
+    public void setMapImage(BufferedImage img){mapPanel.setImage(img);}
 }
