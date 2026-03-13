@@ -37,7 +37,6 @@ public class CarObject {
     public void setRouteSegments(List<PhysicsRoadSegment> segments) {
         physics.setRouteSegments(segments);
 
-        // When a route is first loaded, start the car on the first segment.
         if (!routeInitialized && segments != null && !segments.isEmpty()) {
             PhysicsRoadSegment first = segments.get(0);
             Vector3f start = first.getStartPoint();
@@ -54,7 +53,6 @@ public class CarObject {
     }
 
     public void update(float throttle, float brake, float steering, float dt) {
-        // IMPORTANT: rail computed ONCE per frame
         physics.updateRailState(dt);
 
         physics.steer(steering);
@@ -90,17 +88,18 @@ public class CarObject {
         return physics.getRemainingRoadMeters();
     }
 
+    public double getCurrentLatitude() {
+        return physics.getCurrentLatitude();
+    }
+
+    public double getCurrentLongitude() {
+        return physics.getCurrentLongitude();
+    }
+
     public String getId() {
         return id;
     }
 
-    /**
-     * GOOGLE API wants heading in DEGREES from North.
-     * We'll compute yaw from body forward vector:
-     *  - forward = UNIT_Z rotated
-     *  - atan2(forward.x, forward.z) gives 0 when pointing north (z+)
-     *  - degrees in [0, 360)
-     */
     public int getHeadingDegrees() {
         Vector3f forward = body.getPhysicsRotation().mult(Vector3f.UNIT_Z);
 
@@ -109,7 +108,6 @@ public class CarObject {
 
         if (degrees < 0f) degrees += 360f;
 
-        // Round to int; API signature is int head
         return Math.round(degrees);
     }
 
