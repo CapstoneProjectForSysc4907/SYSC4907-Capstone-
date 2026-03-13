@@ -10,7 +10,7 @@ public class VehicleConfig {
     private float rollingResistance = 12.0f;   // N per m/s approx.
     private float maxThrottleForce = 4000f;     // Newtons
     private float maxBrakeForce = 9000f;        // Newtons
-    private float maxSteeringAngleDeg = 30f;    // degrees
+    private float maxSteeringAngleDeg = 90f;    // degrees
     private float wheelbase = 2.4f; //metres //This is the distacne between front and rear wheels
     private float maxSpeed = 200f; //km/h
     private float maxAccelRate = 3000f;
