@@ -57,12 +57,16 @@ public class SimulatorFrame extends JFrame {
         add(hudPanel, BorderLayout.EAST);
         add(footer, BorderLayout.SOUTH);
 
-        setSize(1280, 720);
+        setSize(1100, 720);
         setLocationRelativeTo(null);
     }
 
     public void setStreetViewImage(BufferedImage img) {
         imagePanel.setImage(img);
+    }
+
+    public ImagePanel getImage(){
+        return imagePanel;
     }
 
     public HudPanel getHud() {
