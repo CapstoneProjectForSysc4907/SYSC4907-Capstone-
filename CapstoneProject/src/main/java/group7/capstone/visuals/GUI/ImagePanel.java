@@ -48,11 +48,10 @@ public class ImagePanel extends JPanel {
             return;
         }
 
-        System.out.println("checking new image");
+        //checks if the new image is identical to the previous one before resetting zoom
         if (!bufferedImagesEqual(image,imgToCheck)) {
             zoom = 1;
             turning = 2;
-            System.out.println("reset zoom");
         }
         imgToCheck = image;
 

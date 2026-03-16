@@ -223,7 +223,6 @@ public class Main {
 
                     imageLoader.loadImageAsync(lat, lon, head, img -> {
                         SwingUtilities.invokeLater(() -> {
-                            System.out.println("changing street img");
                             frame.setStreetViewImage(img);
                             // don’t overwrite OFF_ROAD if that’s currently true
                             if (controller.isOnRoad()) {
