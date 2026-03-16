@@ -21,7 +21,7 @@ public class ImagePanel extends JPanel {
 
     private double turning;
     private int lastHead = 500;
-    private static double turnCoef = 0.05;
+    private static double turnCoef = 0.01;
 
     public ImagePanel() {
         setBackground(UITheme.BG);
