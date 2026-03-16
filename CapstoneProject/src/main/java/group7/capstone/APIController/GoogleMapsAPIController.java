@@ -113,7 +113,7 @@ public class GoogleMapsAPIController {
     }
 
     public double[] calculateNewCoords(double lat, double lon, int head){
-        double dist = 0.00025;
+        double dist = 0.00004; // FIX: was 0.00025 (~27m/step). Now ~4.4m/step so 46 points = ~200m total, preventing overshoot past intersections
         double rHead = head*Math.PI/180;
         double newlat = lat + Math.cos(rHead) * dist;
         double newlon = lon + Math.sin(rHead) * dist;
@@ -130,10 +130,11 @@ public class GoogleMapsAPIController {
     }
 
     public APIResponseDomain getStreet(double lat, double lon, int head) {
-        //Head is the cardnial direction
+        //Head is the cardinal direction
         logger.info("finding closest road to: lat=" + lat + ", lon=" + lon);
-        //String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=45.424061778387276,-75.40926382929229|45.42590246784146,-75.4102358132577&key=" + APIConfig.getAPIKey();
-        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 95) + "&key=" + APIConfig.getAPIKey();
+        // FIX: reduced steps to 10 (~44m total path). Short enough to not cross into wrong roads
+        // at dense urban intersections. interpolate=true fills in actual road geometry between points.
+        String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 10) + "&key=" + APIConfig.getAPIKey();
         System.out.println(url);
         Request request = new Request.Builder()
                 .url(url)
@@ -163,7 +164,9 @@ public class GoogleMapsAPIController {
                 }
             }
             responseDomain.setSnappedPoints(segments);
-            techController.ifPresent(technicalSubsystemController -> technicalSubsystemController.setRouteFromApi(responseDomain));
+            // FIX: removed techController.ifPresent() call here. It was calling setRouteFromApi()
+            // on every extension request, wiping the existing route each time instead of appending.
+            // TechnicalSubsystemController now decides whether to set or extend the route.
         } catch (IOException e) {
             logger.warning("google api call failed");
             throw new RuntimeException(e);
