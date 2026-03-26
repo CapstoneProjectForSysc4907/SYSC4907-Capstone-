@@ -17,7 +17,7 @@ public class ImagePanel extends JPanel {
     private javax.swing.Timer fadeTimer;
 
     private double zoom;
-    private static double zoomCoef = 0.001;
+    private static double zoomCoef = 0.0005;
 
     private double turning;
     private int lastHead = 500;
@@ -96,14 +96,13 @@ public class ImagePanel extends JPanel {
         int imgW = image.getWidth();
         int imgH = image.getHeight();
 
-        double zoomWidth = panelW * zoom;
-        double zoomHeight = panelH * zoom;
+        double zoomWidth = imgW * zoom;
+        double zoomHeight = imgH * zoom;
 
-        double anchorx = (panelW - zoomWidth) / turning;
-        double anchory = (panelH - zoomHeight) / 2.1;
+        double anchorx = (imgW - zoomWidth);
+        double anchory = (imgH - zoomHeight);
 
         AffineTransform at = new AffineTransform();
-        at.translate(anchorx, anchory);
         at.scale(zoom, zoom);
 
         // Keep aspect ratio
@@ -111,8 +110,8 @@ public class ImagePanel extends JPanel {
         int drawW = (int) (imgW * scale);
         int drawH = (int) (imgH * scale);
 
-        int x = (panelW - drawW) / 2;
-        int y = (panelH - drawH) / 2;
+        int x = 0;
+        int y = 0;
 
         Graphics2D g2 = (Graphics2D) g.create();
 
@@ -120,16 +119,29 @@ public class ImagePanel extends JPanel {
 
         g2.setTransform(at);
 
+        int cropX = (int)((imgW-(imgW/zoom))/turning);
+        int cropY = (int)((imgH-(imgH/zoom))/2.2);
+
+        if((cropX + (int)(imgW/zoom)) > imgW){
+            cropX = imgW-(int)(imgW/zoom)-1;
+        }
+        if((cropY + (int)(imgH/zoom)) > imgH){
+            cropY = imgH-(int)(imgH/zoom)-1;
+        }
+
+        BufferedImage croppedImage = image.getSubimage(cropX, cropY, (int)(imgW/zoom), (int)(imgH/zoom));
+
         // Draw previous image underneath
         if (prevImage != null && fadeAlpha < 1f) {
+            BufferedImage croppedPrevImage = prevImage.getSubimage(cropX, cropY, (int)(imgW/zoom), (int)(imgH/zoom));
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-            g2.drawImage(prevImage, x, y, drawW, drawH, null);
+            g2.drawImage(croppedPrevImage, x, y, (int)(drawW/zoom), (int)(drawH/zoom), null);
 
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, fadeAlpha));
-            g2.drawImage(image, x, y, drawW, drawH, null);
+            g2.drawImage(croppedImage, x, y, (int)(drawW/zoom), (int)(drawH/zoom), null);
         } else {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-            g2.drawImage(image, x, y, drawW, drawH, null);
+            g2.drawImage(croppedImage, x, y, (int)(drawW/zoom), (int)(drawH/zoom), null);
         }
 
         g2.dispose();
@@ -149,7 +161,8 @@ public class ImagePanel extends JPanel {
             zoom = 1.00;
         }
 
-        turning = turning + ((lastHead-turn)*turnCoef);
+
+        turning = turning + ((lastHead-turn)*turnCoef)*(1/(zoom*zoom));
 
         if (turning < 0.1) {
             turning = 0.1;
