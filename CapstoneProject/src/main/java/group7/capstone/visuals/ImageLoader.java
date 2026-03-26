@@ -131,6 +131,7 @@ public class ImageLoader {
             storeInCache(cacheKey, formattedImage);
 
             successfulLoads++;
+
             return formattedImage;
 
         } catch (IOException e) {

@@ -108,6 +108,25 @@ public class Main {
         }
         GlobalScreen.addNativeKeyListener(new InputHandler());
 
+        boolean running = true;
+
+        Thread zoomthread = new Thread() {
+            public void run() {
+                while (running) {
+                    try {
+                        float speed = controller.getSpeedKmh();
+                        int turn = controller.getHeadingDegrees();
+                        frame.getImage().zoom(speed, turn);
+                        sleep(50);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
+
+        zoomthread.start();
+
         while (simTime < endTime && !InputHandler.isExitRequested()) {
 
             // ---- Read input state each frame ----
@@ -193,7 +212,7 @@ public class Main {
                 boolean changedEnough = haveGeo && (
                         lastImgPos == null
                                 || distMoved >= 12f
-                                || Math.abs(head - lastImgHeading) >= 6
+                                || Math.abs(head - lastImgHeading) >= 12
                 );
 
                 if (changedEnough) {
@@ -256,6 +275,7 @@ public class Main {
         try { GlobalScreen.unregisterNativeHook(); } catch (Exception ignored) {}
         try { imageLoader.shutdown();
             mapLoader.shutdown();} catch (Exception ignored) {}
+        try {zoomthread.interrupt();} catch (Exception ignored) {}
 
         System.out.println("Done.");
     }
