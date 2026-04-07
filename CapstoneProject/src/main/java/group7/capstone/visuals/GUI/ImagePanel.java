@@ -172,7 +172,7 @@ public class ImagePanel extends JPanel {
         repaint();
     }
 
-    boolean bufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
+    public boolean bufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
 
         int targetWidth = 800;
         int targetHeight = 600;

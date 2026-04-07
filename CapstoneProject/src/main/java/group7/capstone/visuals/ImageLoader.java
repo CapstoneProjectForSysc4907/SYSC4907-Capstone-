@@ -281,6 +281,11 @@ public class ImageLoader {
             evictOldestImage();
         }
     }
+    //statistics getters
+    public long getCacheHits() { return cacheHits; }
+    public long getCacheMisses() { return cacheMisses; }
+    public long getSuccessfulLoads() { return successfulLoads; }
+    public long getFailedLoads() { return failedLoads; }
 
     public void shutdown() {
         executorService.shutdown();
