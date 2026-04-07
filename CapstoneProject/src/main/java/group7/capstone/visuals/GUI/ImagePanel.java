@@ -131,7 +131,6 @@ public class ImagePanel extends JPanel {
 
         BufferedImage croppedImage = image.getSubimage(cropX, cropY, (int)(imgW/zoom), (int)(imgH/zoom));
 
-        // Draw previous image underneath
         if (prevImage != null && fadeAlpha < 1f) {
             BufferedImage croppedPrevImage = prevImage.getSubimage(cropX, cropY, (int)(imgW/zoom), (int)(imgH/zoom));
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
@@ -146,7 +145,6 @@ public class ImagePanel extends JPanel {
 
         g2.dispose();
 
-        // Light frame border
         g.setColor(UITheme.BORDER);
         g.drawRect(x, y, drawW - 1, drawH - 1);
     }
@@ -174,7 +172,7 @@ public class ImagePanel extends JPanel {
         repaint();
     }
 
-    boolean bufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
+    public boolean bufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
 
         int targetWidth = 800;
         int targetHeight = 600;

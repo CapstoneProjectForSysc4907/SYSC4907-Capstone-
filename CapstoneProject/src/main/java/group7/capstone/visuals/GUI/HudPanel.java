@@ -39,7 +39,6 @@ public class HudPanel extends JPanel {
         add(title, BorderLayout.NORTH);
         add(content, BorderLayout.CENTER);
 
-        // Styling values (student-simple)
         styleValue(speedValue);
         styleValue(latLngValue);
         styleValue(headingValue);
