@@ -3,7 +3,6 @@ package group7.capstone.visuals.GUI;
 import java.awt.*;
 
 public class UITheme {
-    // a few shared colors + fonts
     public static final Color BG = new Color(18, 18, 18);
     public static final Color PANEL = new Color(28, 28, 28);
     public static final Color BORDER = new Color(55, 55, 55);

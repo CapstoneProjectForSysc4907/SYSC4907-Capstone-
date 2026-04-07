@@ -32,7 +32,6 @@ public class ImageLoaderDemo {
     }
 
     private static void loadAndShow(ImageLoader loader, double lat, double lng, int heading, String label) {
-        System.out.print("Loading " + label);
         BufferedImage image = loader.loadStreetViewImage(lat, lng, heading);
 
         if (image != null) {
