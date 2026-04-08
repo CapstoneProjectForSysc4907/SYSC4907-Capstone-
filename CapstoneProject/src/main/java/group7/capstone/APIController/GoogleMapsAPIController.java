@@ -57,14 +57,14 @@ public class GoogleMapsAPIController {
         this.techController = techController;
     }
 
+    /**
+     *
+     * @param lat latitude of the simulated car
+     * @param lon longitude of the simulated car
+     * @return returns an image of a map centered on the car
+     * @throws IOException
+     */
     public BufferedImage GetMapImage(double lat, double lon) throws IOException {
-        /*
-        gets an image from the google maps static streetview api
-        latitude and longitude are in degrees from prime meridian and equator
-        heading is in degrees from north
-        returns a 120 slice of the panorama as a buffered image
-        each costs 7 dollars per 1000 calls with 10,000 call buffer
-         */
         logger.info("requesting map from: lat=" + lat + ", lon=" + lon);
         String url = APIConfig.Base_URL_MAP + "&markers=" + lat + ", " + lon + "&key=" + APIConfig.getAPIKey();
         Request request = new Request.Builder()
