@@ -151,6 +151,12 @@ public class ImagePanel extends JPanel {
         g.drawRect(x, y, drawW - 1, drawH - 1);
     }
 
+    /**
+     * Changes which area of the street view is zoomed into
+     *
+     * @param dist the distance traveled by the vehicle since the last tick
+     * @param turn the amount the vehicle has turned since the last tick
+     */
     public void zoom(double dist, int turn){
         if(lastHead == 500){
             lastHead = turn;
@@ -160,7 +166,6 @@ public class ImagePanel extends JPanel {
         if (zoom < 1.00) {
             zoom = 1.00;
         }
-
 
         turning = turning + ((lastHead-turn)*turnCoef)*(1/(zoom*zoom));
 

@@ -7,10 +7,12 @@ public class APIConfig {
 
     private static String APILogFile = "APILog.log";
 
+
+    /**
+     * returns the api key from the system environment
+     * to add the api key to your system go to system properties, environment variables, then create MapsAPIKey
+     */
     public static String getAPIKey(){
-        /*returns the api key from the system environment
-        to add the api key to your system go to system properties, environment variables, then create MapsAPIKey
-         */
         return System.getenv("MapsAPIKey");
     }
 

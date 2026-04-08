@@ -74,8 +74,6 @@ public class GoogleMapsAPIController {
             assert response.body() != null;
             logger.info("result returned is probably map");
 
-            //ready to switch out to match image loader
-            //return new StreetViewImage(response.body().bytes(), head, lat, lon);
             return ImageIO.read(response.body().byteStream());
 
         } catch (IOException e) {
@@ -84,14 +82,16 @@ public class GoogleMapsAPIController {
         }
     }
 
+    /**
+     * returns the static street view from the Google Maps API
+     *
+     * @param lat the latitude of the simulated car
+     * @param lon the longitude of the simulated car
+     * @param head the heading in degrees from north
+     * @return StreetViewImage object containing an image and associated coordinates
+     * @throws IOException
+     */
     public StreetViewImage GetStreetViewImage(double lat, double lon, int head) throws IOException {
-        /*
-        gets an image from the google maps static streetview api
-        latitude and longitude are in degrees from prime meridian and equator
-        heading is in degrees from north
-        returns a 120 slice of the panorama as a buffered image
-        each costs 7 dollars per 1000 calls with 10,000 call buffer
-         */
         logger.info("requesting image from: lat=" + lat + ", lon=" + lon + ", heading=" + head);
         String url = APIConfig.BASE_URL_STREETVIEW + "&heading=" + head + "&location=" + lat + ", " + lon + "&key=" + APIConfig.getAPIKey();
 
@@ -102,8 +102,6 @@ public class GoogleMapsAPIController {
             assert response.body() != null;
             logger.info("result returned is probably image");
 
-            //ready to switch out to match image loader
-            //return new StreetViewImage(response.body().bytes(), head, lat, lon);
             return new StreetViewImage(ImageIO.read(response.body().byteStream()), lat, lon, head);
 
         } catch (IOException e) {
@@ -112,14 +110,31 @@ public class GoogleMapsAPIController {
         }
     }
 
+    /**
+     * calculates the coordinates of the point a set distance ahead of the car
+     *
+     * @param lat the latitude of the car
+     * @param lon the longitude of the car
+     * @param head the heading of the car
+     * @return a pair of coordinates representing the cars new position.
+     */
     public double[] calculateNewCoords(double lat, double lon, int head){
-        double dist = 0.00004; // FIX: was 0.00025 (~27m/step). Now ~4.4m/step so 46 points = ~200m total, preventing overshoot past intersections
+        double dist = 0.00004;
         double rHead = head*Math.PI/180;
         double newlat = lat + Math.cos(rHead) * dist;
         double newlon = lon + Math.sin(rHead) * dist;
         return new double[]{newlat, newlon};
     }
 
+    /**
+     * gathers steps number of evenly spaced coordinates ahead of the car
+     *
+     * @param lat the latitude of the car
+     * @param lon the longitude of the car
+     * @param head the heading of the car
+     * @param steps number of points the car will map out
+     * @return a string containing the coordinates that will be snapped to the nearest road
+     */
     public String getPath(double lat, double lon, int head, int steps){
         String newPath = lat + "," + lon;
         double[] next = calculateNewCoords(lat,lon,head);
@@ -129,13 +144,19 @@ public class GoogleMapsAPIController {
         return newPath;
     }
 
+    /**
+     * maps out the road ahead of the car based on its coordinates and heading
+     *
+     * @param lat the latitude coordinate of the car
+     * @param lon the longitude coordinate of the car
+     * @param head the heading of the car (0 and 360  are north)
+     * @return an APIResponseDomain object containing a list of coordinates that form the road
+     */
     public APIResponseDomain getStreet(double lat, double lon, int head) {
-        //Head is the cardinal direction
         logger.info("finding closest road to: lat=" + lat + ", lon=" + lon);
-        // FIX: reduced steps to 10 (~44m total path). Short enough to not cross into wrong roads
-        // at dense urban intersections. interpolate=true fills in actual road geometry between points.
+
+        //Block 1
         String url = APIConfig.BASE_URL_SNAPTOROAD + "?interpolate=true&path=" + getPath(lat, lon, head, 10) + "&key=" + APIConfig.getAPIKey();
-        System.out.println(url);
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -143,6 +164,7 @@ public class GoogleMapsAPIController {
         ArrayList<APIResponseDomain.SnappedPoint> segments = new ArrayList<>();
         APIResponseDomain responseDomain = new APIResponseDomain();
 
+        //Block 2
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;
             logger.info("result returned properly");
@@ -150,6 +172,7 @@ public class GoogleMapsAPIController {
             ArrayList<Map> points = (ArrayList<Map>) jsonResponseObject.get("snappedPoints");
             Map<String, Object> location;
 
+            //Block 3
             for (Map<String,Object> p: points) {
                 segments.add(new APIResponseDomain.SnappedPoint());
                 APIResponseDomain.SnappedPoint s = segments.get(segments.size() - 1);
@@ -164,42 +187,12 @@ public class GoogleMapsAPIController {
                 }
             }
             responseDomain.setSnappedPoints(segments);
-            // FIX: removed techController.ifPresent() call here. It was calling setRouteFromApi()
-            // on every extension request, wiping the existing route each time instead of appending.
-            // TechnicalSubsystemController now decides whether to set or extend the route.
+
         } catch (IOException e) {
             logger.warning("google api call failed");
             throw new RuntimeException(e);
         }
         logger.info("exiting getStreet function");
         return responseDomain;
-    }
-
-
-    public void saveStreetViews(APIResponseDomain road, String head){
-        //saves the images in a file for testing purposes
-        /* TODO: fix after api controller changes.
-        int num = 0;
-
-        try{
-            for(APIResponseDomain.SnappedPoint p : road.getSnappedPoints()){
-                System.out.println(p.toString());
-                StreetViewImage image = GetStreetViewImage(p.getLocation().getLatitude(),p.getLocation().getLongitude(),head);
-                String imgName = p.getPlaceId() + num;
-                data.add(new String[]{newLat, newLon, head, imgName});
-                image.saveImageToFile("png", "preload/" + imgName);
-                num += 1;
-            }
-            try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
-                writer.writeAll(data); // Write all data at once
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            //System.out.println(response.body().string());
-        } catch (IOException e) {
-            logger.warning("google api call failed");
-            throw new RuntimeException(e);
-        }
-        */
     }
 }
