@@ -24,7 +24,6 @@ public final class RoadDataHolder {
     }
 
     public static RoadDataHolder getInstance() {
-        // Double-checked locking (safe + fast)
         RoadDataHolder local = instance;
         if (local == null) {
             synchronized (RoadDataHolder.class) {
@@ -77,7 +76,7 @@ public final class RoadDataHolder {
         return new ArrayList<>(roadList);
     }
 
-    /** Read-only view copy (often nicer for callers). */
+    /** Read-only view copy */
     public synchronized List<RoadSegment> getRoadListReadOnly() {
         return Collections.unmodifiableList(new ArrayList<>(roadList));
     }

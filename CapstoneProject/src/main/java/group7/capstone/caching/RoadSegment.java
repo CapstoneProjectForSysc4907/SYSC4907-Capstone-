@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * This is a stub that will be replaced when Action 3 API Controller is done.
- *
  * Represents a snapped road as a sequence of geographic points.
  */
 public class RoadSegment {
@@ -19,19 +17,12 @@ public class RoadSegment {
     private final double speedLimit;
     private final String roadName;
 
-    /**
-     * Constructs a RoadSegment from an APIResponseDomain.
-     * Only latitude/longitude are extracted.
-     */
     public RoadSegment(APIResponseDomain response) {
         this.speedLimit = DEFAULT_SPEED_LIMIT;
         this.roadName = null;
         this.points = extractPoints(response);
     }
 
-    /**
-     * Returns an immutable list of points making up this road segment.
-     */
     public List<Point> getPoints() {
         return Collections.unmodifiableList(points);
     }
@@ -54,7 +45,6 @@ public class RoadSegment {
         for (APIResponseDomain.SnappedPoint snapped : response.getSnappedPoints()) {
             APIResponseDomain.LatLng loc = snapped.getLocation();
             if (loc == null) continue;
-
             result.add(new Point(loc.getLatitude(), loc.getLongitude()));
         }
 
@@ -63,14 +53,10 @@ public class RoadSegment {
 
     @Override
     public String toString() {
-        return "RoadSegment{points=" + points.size()
-                + ", speedLimit=" + speedLimit + " km/h}";
+        return "RoadSegment{points=" + points.size() + ", speedLimit=" + speedLimit + " km/h}";
     }
 
-    /* ============================================================
-       INTERNAL POINT TYPE — NOT EXPOSED OUTSIDE RoadSegment
-       ============================================================ */
-
+    // Point class used internally by RoadSegment
     public static final class Point {
         private final double latitude;
         private final double longitude;
@@ -80,13 +66,8 @@ public class RoadSegment {
             this.longitude = longitude;
         }
 
-        public double getLatitude() {
-            return latitude;
-        }
-
-        public double getLongitude() {
-            return longitude;
-        }
+        public double getLatitude() { return latitude; }
+        public double getLongitude() { return longitude; }
 
         @Override
         public String toString() {

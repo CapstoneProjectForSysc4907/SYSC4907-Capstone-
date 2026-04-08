@@ -20,14 +20,12 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        // MUST be FIRST: load Bullet native before PhysicsSpace is created
         NativeLibraryLoader.loadNativeLibrary("bulletjme", true);
 
         GoogleMapsAPIController googleApi = new GoogleMapsAPIController();
         RoadApiCacheManager roadCache = new RoadApiCacheManager(googleApi);
         TechnicalSubsystemController controller = new TechnicalSubsystemController(googleApi, roadCache);
 
-        // ---- driving feel tuning (fast to adjust, no architecture changes) ----
         VehicleConfig cfg = VehicleConfig.getInstance();
         cfg.setMaxThrottleForce(6500f);
         cfg.setMaxAccelRate(12000f);
@@ -44,7 +42,7 @@ public class Main {
         System.out.println("Initial road loaded: geoPts=" + controller.getGeoPointCount()
                 + " segs=" + controller.getPhysicsSegmentCount());
 
-        // --- GUI setup (Swing) ---
+        // --- GUI setup  ---
         SimulatorFrame[] frameRef = new SimulatorFrame[1];
         SwingUtilities.invokeAndWait(() -> {
             SimulatorFrame frame = new SimulatorFrame();
@@ -67,7 +65,7 @@ public class Main {
         ImageLoader imageLoader = new ImageLoader(googleApi);
         ImageLoader mapLoader = new ImageLoader(googleApi);
 
-        // --- Fixed-step timing (target 60 Hz) ---
+        // --- Fixed-step timing ---
         final float dt = 1f / 60f;
         long frameNanos = (long) (dt * 1_000_000_000L);
         long nextTick = System.nanoTime();
@@ -87,14 +85,14 @@ public class Main {
         float lastPrint = 0f;
         float endTime = 3000000f;
 
-        // --- GUI update cadence (don’t spam EDT) ---
+        // --- GUI update cadence  ---
         float hudTick = 0f;
         final float HUD_DT = 1f / 10f; // 10 Hz
 
         float imgTick = 0f;
         final float IMG_DT = 0.75f;
 
-        // last requested image reference (in world metres + heading)
+        // last requested image reference
         com.jme3.math.Vector3f lastImgPos = null;
         int lastImgHeading = -1;
 
@@ -133,7 +131,6 @@ public class Main {
             throttle = InputHandler.isForward() ? THROTTLE_ON : 0.0f;
             brake    = InputHandler.isBrake()   ? BRAKE_ON    : 0.0f;
 
-            // Optional policy: if braking, cut throttle
             if (brake > 0f) throttle = 0f;
 
             steering = 0.0f;
@@ -183,7 +180,6 @@ public class Main {
                 });
             }
 
-            // Request Street View at most once per second, and only if we have geo.
             if (imgTick >= IMG_DT && frame != null) {
                 imgTick = 0f;
 
@@ -266,12 +262,10 @@ public class Main {
                 // sleep(ms, ns)
                 Thread.sleep(sleep / 1_000_000L, (int) (sleep % 1_000_000L));
             } else {
-                // If we're behind, reset so we don't spiral into huge negative sleep
                 nextTick = System.nanoTime();
             }
         }
-
-        // Best-effort cleanup (in case ESC wasn’t used)
+        
         try { GlobalScreen.unregisterNativeHook(); } catch (Exception ignored) {}
         try { imageLoader.shutdown();
             mapLoader.shutdown();} catch (Exception ignored) {}

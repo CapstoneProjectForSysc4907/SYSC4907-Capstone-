@@ -6,6 +6,10 @@
   <millis>1775670526402</millis>
   <nanos>979800</nanos>
   <sequence>0</sequence>
+  <date>2026-04-08T16:19:55.378861100Z</date>
+  <millis>1775665195378</millis>
+  <nanos>861100</nanos>
+  <sequence>2</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
@@ -18,6 +22,13 @@
   <millis>1775670526991</millis>
   <nanos>740400</nanos>
   <sequence>1</sequence>
+  <message>finding closest road to: lat=45.4191133, lon=-75.6995299</message>
+</record>
+<record>
+  <date>2026-04-08T16:19:56.093918Z</date>
+  <millis>1775665196093</millis>
+  <nanos>918000</nanos>
+  <sequence>3</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
@@ -30,6 +41,10 @@
   <millis>1775670527030</millis>
   <nanos>294100</nanos>
   <sequence>2</sequence>
+  <date>2026-04-08T16:19:56.146052100Z</date>
+  <millis>1775665196146</millis>
+  <nanos>52100</nanos>
+  <sequence>4</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
@@ -42,6 +57,82 @@
   <millis>1775670527049</millis>
   <nanos>98500</nanos>
   <sequence>3</sequence>
+  <date>2026-04-08T16:19:56.971220500Z</date>
+  <millis>1775665196971</millis>
+  <nanos>220500</nanos>
+  <sequence>5</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>finding closest road to: lat=45.419101525036545, lon=-75.69955529268233</message>
+</record>
+<record>
+  <date>2026-04-08T16:19:57.059965100Z</date>
+  <millis>1775665197059</millis>
+  <nanos>965100</nanos>
+  <sequence>6</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>result returned properly</message>
+</record>
+<record>
+  <date>2026-04-08T16:19:57.063023900Z</date>
+  <millis>1775665197063</millis>
+  <nanos>23900</nanos>
+  <sequence>7</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>exiting getStreet function</message>
+</record>
+<record>
+  <date>2026-04-08T16:19:57.812708800Z</date>
+  <millis>1775665197812</millis>
+  <nanos>708800</nanos>
+  <sequence>8</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>48</thread>
+  <message>requesting map from: lat=45.419101525036545, lon=-75.69955529268233</message>
+</record>
+<record>
+  <date>2026-04-08T16:19:57.816738500Z</date>
+  <millis>1775665197816</millis>
+  <nanos>738500</nanos>
+  <sequence>9</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetStreetViewImage</method>
+  <thread>47</thread>
+  <message>requesting image from: lat=45.419101525036545, lon=-75.69955529268233, heading=147</message>
+</record>
+<record>
+  <date>2026-04-08T16:19:57.966011400Z</date>
+  <millis>1775665197966</millis>
+  <nanos>11400</nanos>
+  <sequence>10</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>48</thread>
+  <message>result returned is probably map</message>
+</record>
+<record>
+  <date>2026-04-08T16:19:58.263773400Z</date>
+  <millis>1775665198263</millis>
+  <nanos>773400</nanos>
+  <sequence>11</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
@@ -54,11 +145,260 @@
   <millis>1775670527354</millis>
   <nanos>326500</nanos>
   <sequence>4</sequence>
+  <thread>47</thread>
+  <message>result returned is probably image</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:01.600869200Z</date>
+  <millis>1775665201600</millis>
+  <nanos>869200</nanos>
+  <sequence>12</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>finding closest road to: lat=45.41907185932418, lon=-75.69952737136833</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:01.668723100Z</date>
+  <millis>1775665201668</millis>
+  <nanos>723100</nanos>
+  <sequence>13</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>result returned properly</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:01.673977700Z</date>
+  <millis>1775665201673</millis>
+  <nanos>977700</nanos>
+  <sequence>14</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>exiting getStreet function</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:03.227519Z</date>
+  <millis>1775665203227</millis>
+  <nanos>519000</nanos>
+  <sequence>15</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetStreetViewImage</method>
+  <thread>51</thread>
+  <message>requesting image from: lat=45.41901252787052, lon=-75.69947152882031, heading=146</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:03.228519700Z</date>
+  <millis>1775665203228</millis>
+  <nanos>519700</nanos>
+  <sequence>16</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>52</thread>
+  <message>requesting map from: lat=45.41901252787052, lon=-75.69947152882031</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:03.347656800Z</date>
+  <millis>1775665203347</millis>
+  <nanos>656800</nanos>
+  <sequence>17</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>52</thread>
+  <message>result returned is probably map</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:03.360666200Z</date>
+  <millis>1775665203360</millis>
+  <nanos>666200</nanos>
+  <sequence>18</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>finding closest road to: lat=45.418982862129226, lon=-75.69944360758632</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:03.423347200Z</date>
+  <millis>1775665203423</millis>
+  <nanos>347200</nanos>
+  <sequence>19</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>result returned properly</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:03.426398Z</date>
+  <millis>1775665203426</millis>
+  <nanos>398000</nanos>
+  <sequence>20</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>exiting getStreet function</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:03.430400300Z</date>
+  <millis>1775665203430</millis>
+  <nanos>400300</nanos>
+  <sequence>21</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetStreetViewImage</method>
+  <thread>51</thread>
+  <message>result returned is probably image</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:04.812072800Z</date>
+  <millis>1775665204812</millis>
+  <nanos>72800</nanos>
+  <sequence>22</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetStreetViewImage</method>
+  <thread>53</thread>
+  <message>requesting image from: lat=45.41886419906769, lon=-75.69933192291703, heading=146</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:04.813109700Z</date>
+  <millis>1775665204813</millis>
+  <nanos>109700</nanos>
+  <sequence>23</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>54</thread>
+  <message>requesting map from: lat=45.41886419906769, lon=-75.69933192291703</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:04.932329400Z</date>
+  <millis>1775665204932</millis>
+  <nanos>329400</nanos>
+  <sequence>24</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>54</thread>
+  <message>result returned is probably map</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:04.989712700Z</date>
+  <millis>1775665204989</millis>
+  <nanos>712700</nanos>
+  <sequence>25</sequence>
   <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
   <method>GetStreetViewImage</method>
   <thread>1</thread>
+  <thread>53</thread>
+  <message>result returned is probably image</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:05.011524600Z</date>
+  <millis>1775665205011</millis>
+  <nanos>524600</nanos>
+  <sequence>26</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>finding closest road to: lat=45.41882670174009, lon=-75.6992979885351</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:05.075102600Z</date>
+  <millis>1775665205075</millis>
+  <nanos>102600</nanos>
+  <sequence>27</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>result returned properly</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:05.087272600Z</date>
+  <millis>1775665205087</millis>
+  <nanos>272600</nanos>
+  <sequence>28</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>getStreet</method>
+  <thread>1</thread>
+  <message>exiting getStreet function</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:05.640001700Z</date>
+  <millis>1775665205640</millis>
+  <nanos>1700</nanos>
+  <sequence>29</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetStreetViewImage</method>
+  <thread>55</thread>
+  <message>requesting image from: lat=45.418763885896944, lon=-75.69924426536112, heading=146</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:05.640001700Z</date>
+  <millis>1775665205640</millis>
+  <nanos>1700</nanos>
+  <sequence>30</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>56</thread>
+  <message>requesting map from: lat=45.418763885896944, lon=-75.69924426536112</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:05.762525600Z</date>
+  <millis>1775665205762</millis>
+  <nanos>525600</nanos>
+  <sequence>31</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetMapImage</method>
+  <thread>56</thread>
+  <message>result returned is probably map</message>
+</record>
+<record>
+  <date>2026-04-08T16:20:05.863855500Z</date>
+  <millis>1775665205863</millis>
+  <nanos>855500</nanos>
+  <sequence>32</sequence>
+  <logger>group7.capstone.APIController.GoogleMapsAPIController</logger>
+  <level>INFO</level>
+  <class>group7.capstone.APIController.GoogleMapsAPIController</class>
+  <method>GetStreetViewImage</method>
+  <thread>55</thread>
   <message>result returned is probably image</message>
 </record>
 </log>
