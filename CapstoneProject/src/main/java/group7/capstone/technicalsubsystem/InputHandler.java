@@ -9,13 +9,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InputHandler implements NativeKeyListener {
 
-    // Key state (thread-safe enough for this use)
+    // Key state
     private static final AtomicBoolean forward = new AtomicBoolean(false);
     private static final AtomicBoolean brake   = new AtomicBoolean(false);
     private static final AtomicBoolean left    = new AtomicBoolean(false);
     private static final AtomicBoolean right   = new AtomicBoolean(false);
 
-    // Optional: a kill switch your main loop can watch
     private static final AtomicBoolean exitRequested = new AtomicBoolean(false);
 
     @Override
@@ -89,7 +88,6 @@ public class InputHandler implements NativeKeyListener {
         // ignore (typed is not useful for continuous controls)
     }
 
-    // ---- Read-only access for your sim loop ----
     public static boolean isForward() { return forward.get(); }
     public static boolean isBrake()   { return brake.get(); }
     public static boolean isLeft()    { return left.get(); }

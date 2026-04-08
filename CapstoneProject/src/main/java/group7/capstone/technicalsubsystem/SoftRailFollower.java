@@ -10,7 +10,6 @@ import java.util.List;
  * - If not, returns nearest snap point + segment direction.
  * - Tracks current segment index + progress t (0..1) when on-road.
  *
- * No steering. No forces. No "next segment" logic.
  */
 public class SoftRailFollower {
 
@@ -71,7 +70,6 @@ public class SoftRailFollower {
         Vector3f bestForward = null;
         Vector3f bestRight = null;
 
-        // Fast path: if we were on a segment last frame, try to stay on it with a looser band.
         if (currentIndex >= 0 && currentIndex < segments.size()) {
             PhysicsRoadSegment seg = segments.get(currentIndex);
             float innerHalfWidth = computeInnerHalfWidth(seg);
@@ -91,7 +89,7 @@ public class SoftRailFollower {
             }
         }
 
-        // Full scan: must be inside the tighter band (or near a segment endpoint) to be considered back on-road.
+        // Full scan
         for (int i = 0; i < segments.size(); i++) {
             PhysicsRoadSegment seg = segments.get(i);
 
@@ -109,7 +107,7 @@ public class SoftRailFollower {
                     pointDist2XZ(pos, seg.getStartPoint()) <= CORNER_GRACE_RADIUS_SQ ||
                             pointDist2XZ(pos, seg.getEndPoint()) <= CORNER_GRACE_RADIUS_SQ;
 
-            // Inside corridor or near joined endpoint => ON ROAD
+            // Inside corridor or near joined endpoint
             if (dist <= innerHalfWidth || nearCorner) {
                 currentSegment = seg;
                 currentIndex = i;
