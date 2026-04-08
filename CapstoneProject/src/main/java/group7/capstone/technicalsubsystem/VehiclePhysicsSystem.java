@@ -47,7 +47,7 @@ public class VehiclePhysicsSystem {
         lastRailResult = null;
     }
 
-    /** Call ONCE per frame (before isOnRoad / remaining road / teleport decisions). */
+    /** Call ONCE per frame  */
     public void updateRailState(float dt) {
         if (routeSegments == null || routeSegments.isEmpty()) {
             lastRailResult = new SoftRailFollower.Result(false, null, null, null, 0f, -1, 0f);
@@ -161,7 +161,6 @@ public class VehiclePhysicsSystem {
 
     /**
      * Hard reset to a known-safe pose.
-     * Use this when you first load a route
      */
     public void hardResetTo(Vector3f pos, Vector3f forwardDirXZ) {
         teleportTo(pos, forwardDirXZ);
@@ -281,7 +280,7 @@ public class VehiclePhysicsSystem {
         }
     }
 
-    // ---------------- STEERING (PLAYER ONLY) ----------------
+    // ---------------- STEERING ----------------
 
     private float steeringInput = 0f;
     private float steeringAngleDeg = 0f;

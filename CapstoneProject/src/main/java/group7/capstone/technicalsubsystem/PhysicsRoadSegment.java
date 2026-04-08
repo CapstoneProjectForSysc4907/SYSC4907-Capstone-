@@ -22,13 +22,12 @@ public class PhysicsRoadSegment {
         if (laneCount <= 0) throw new IllegalArgumentException("laneCount must be > 0");
         if (laneWidthMeters <= 0f) throw new IllegalArgumentException("laneWidthMeters must be > 0");
 
-        // Defensive copies (Vector3f is mutable)
+        // Defensive copies
         this.startPoint = startPoint.clone();
         this.endPoint = endPoint.clone();
         this.laneCount = laneCount;
         this.laneWidthMeters = laneWidthMeters;
 
-        // MIN ADD
         this.originalSegment = originalSegment;
     }
 
@@ -41,7 +40,6 @@ public class PhysicsRoadSegment {
         return endPoint.distance(startPoint);
     }
 
-    // MIN ADD
     public RoadSegment getOriginalSegment() {
         return originalSegment;
     }
