@@ -2,6 +2,10 @@
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
+  <date>2026-04-08T17:48:46.402979800Z</date>
+  <millis>1775670526402</millis>
+  <nanos>979800</nanos>
+  <sequence>0</sequence>
   <date>2026-04-08T16:19:55.378861100Z</date>
   <millis>1775665195378</millis>
   <nanos>861100</nanos>
@@ -11,6 +15,13 @@
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
   <method>getStreet</method>
   <thread>1</thread>
+  <message>finding closest road to: lat=45.42407319361511, lon=-75.40922137593788</message>
+</record>
+<record>
+  <date>2026-04-08T17:48:46.991740400Z</date>
+  <millis>1775670526991</millis>
+  <nanos>740400</nanos>
+  <sequence>1</sequence>
   <message>finding closest road to: lat=45.4191133, lon=-75.6995299</message>
 </record>
 <record>
@@ -26,6 +37,10 @@
   <message>result returned properly</message>
 </record>
 <record>
+  <date>2026-04-08T17:48:47.030294100Z</date>
+  <millis>1775670527030</millis>
+  <nanos>294100</nanos>
+  <sequence>2</sequence>
   <date>2026-04-08T16:19:56.146052100Z</date>
   <millis>1775665196146</millis>
   <nanos>52100</nanos>
@@ -38,6 +53,10 @@
   <message>exiting getStreet function</message>
 </record>
 <record>
+  <date>2026-04-08T17:48:47.049098500Z</date>
+  <millis>1775670527049</millis>
+  <nanos>98500</nanos>
+  <sequence>3</sequence>
   <date>2026-04-08T16:19:56.971220500Z</date>
   <millis>1775665196971</millis>
   <nanos>220500</nanos>
@@ -118,6 +137,14 @@
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
   <method>GetStreetViewImage</method>
+  <thread>1</thread>
+  <message>requesting image from: lat=45.42407319361511, lon=-75.40922137593788, heading=350</message>
+</record>
+<record>
+  <date>2026-04-08T17:48:47.354326500Z</date>
+  <millis>1775670527354</millis>
+  <nanos>326500</nanos>
+  <sequence>4</sequence>
   <thread>47</thread>
   <message>result returned is probably image</message>
 </record>
@@ -286,6 +313,7 @@
   <level>INFO</level>
   <class>group7.capstone.APIController.GoogleMapsAPIController</class>
   <method>GetStreetViewImage</method>
+  <thread>1</thread>
   <thread>53</thread>
   <message>result returned is probably image</message>
 </record>
